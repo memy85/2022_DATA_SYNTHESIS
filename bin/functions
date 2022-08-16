@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+
+source ~/.bash_profile
+
+function set_python_env {
+    if [ ! -d ~/.pyenv/versions/3.8.5 ]; then
+        echo "python 3.8.5 does not exist. Installing python 3.8.5"
+        echo "Also, setting python virtual environment"
+        pyenv install 3.8.5 & pyenv virtualenv 3.8.5 synthetic_data
+    
+    else 
+        if [ ! -d ~/.pyenv/versions/synthetic_data ]; then
+            pyenv virtualenv 3.8.5 synthetic_data
+        fi
+    fi
+
+    activate_pyenv
+    python3 -m pip install -r requirements.txt
+}
+
+function activate_pyenv {
+    # activate python environment
+    pyenv activate synthetic_data
+}
+
+function print_process {
+    echo "======================= $1 $2 ========================" 
+}
+
+function preprocess_data {
+    
+    # use pyenv 
+    # python3=$(pyenv which python)
+    print_process "preprocessing" $1
+    print_process "preprocessing" $1 >> log/0_preprocess/output.txt
+    python3 src/0_preprocess/preprocess_$1.py >> log/0_preprocess/output.txt
+    echo "finished"
+
+}
+
