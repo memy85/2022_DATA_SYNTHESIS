@@ -57,3 +57,14 @@ duplicated_counts : 0
 ======================= preprocessing pt_bsnf ========================
 duplicated_counts : 0
 ======================= preprocessing trtm_casb ========================
+duplicated_counts : 0
+======================= preprocessing trtm_rd ========================
+duplicated_counts : 0
+======================= preprocessing dead_nfrm ========================
+duplicated_counts : 0
+======================= concating all the output =======================
+Check Duplicates Once Again
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+the maximum record is 2177
+the minimum record is 1
+the median record is 30.0

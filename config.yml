@@ -138,6 +138,16 @@ data_config :
       child : [RDT_SITD_NM]
 
 
+  static_variable :
+    - BSPT_FRST_DIAG_CD
+    - BSPT_IDGN_AGE
+    - BSPT_M_STAG_VL
+    - BSPT_N_STAG_VL
+    - BSPT_T_STAG_VL
+    - BSPT_STAG_VL
+    - BSPT_SEX_CD
+  
+
 institution_specific_columns :
   - CENTER_CD
   - IRB_APRV_NO
