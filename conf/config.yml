@@ -1,0 +1,154 @@
+### ------------------------------- 이 구역을 configuration 해주십시오
+
+path_config :
+  project_path : /home/wonseok/2022_DATA_SYNTHESIS
+  input_path : /home/wonseok/2022_DATA_SYNTHESIS/data/raw
+  output_path : /home/wonseok/2022_DATA_SYNTHESIS/data/processed
+
+random_seed : 42
+epsilon : 0
+
+file_name : 
+  clrc_dg_rcnf : CLRC_DG_RCNF.xlsx
+  clrc_ex_diag : CLRC_EX_DIAG.csv
+  clrc_oprt_nfrm : CLRC_OPRT_NFRM.xlsx
+  clrc_pth_bpsy : CLRC_PTH_BPSY.xlsx
+  clrc_pth_mlcr : CLRC_PTH_MLCR.xlsx
+  clrc_pth_mnty : CLRC_PTH_MNTY.xlsx
+  clrc_pth_srgc : CLRC_PTH_SRGC.xlsx
+  clrc_pt_bsnf : CLRC_PT_BSNF.xlsx
+  clrc_trtm_casb : CLRC_TRTM_CASB.xlsx
+  clrc_trtm_rd : CLRC_TRTM_RD.xlsx
+  clrc_dead_nfrm : CLRC_DEAD_NFRM.xlsx
+
+
+### -------------------------------- 여기는 건드리지 마시오
+
+data_config : 
+  required : 
+    CLRC_DEAD_NFRM:
+      DEAD_YMD: datetime64[ns]
+      PT_SBST_NO: object
+    CLRC_DG_RCNF:
+      PT_SBST_NO: object
+      RLPS_DIAG_YMD: datetime64[ns]
+    CLRC_EX_DIAG:
+      CEXM_NM: object
+      CEXM_RSLT_CONT: float32
+      CEXM_YMD: datetime64[ns]
+      PT_SBST_NO: object
+    CLRC_OPRT_NFRM:
+      OPRT_CLCN_OPRT_KIND_CD: object
+      OPRT_CURA_RSCT_CD: object
+      OPRT_YMD: datetime64[ns]
+      PT_SBST_NO: object
+    CLRC_PTH_BPSY:
+      BPTH_ACPT_YMD: datetime64[ns]
+      BPTH_BPSY_RSLT_CONT: object
+      BPTH_CELL_DIFF_CD: object
+      PT_SBST_NO: object
+    CLRC_PTH_MLCR:
+      MLPT_ACPT_YMD: datetime64[ns]
+      MLPT_BRME_RSLT_CD: object
+      MLPT_KE2E_RSLT_CD: object
+      MLPT_KRES_RSLT_CD: object
+      MLPT_MSIE_RSLT_CD: object
+      MLPT_NREX_RSLT_CD: object
+      PT_SBST_NO: object
+    CLRC_PTH_MNTY:
+      IMPT_ACPT_YMD: datetime64[ns]
+      IMPT_HM1E_RSLT_CD: object
+      IMPT_HP2E_RSLT_CD: object
+      IMPT_HS2E_RSLT_CD: object
+      IMPT_HS6E_RSLT_CD: object
+      PT_SBST_NO: object
+    CLRC_PTH_SRGC:
+      PT_SBST_NO: object
+      SGPT_ACPT_YMD: datetime64[ns]
+      SGPT_CELL_DIFF_CD: object
+      SGPT_MTST_LN_CNT: float32
+      SGPT_NERV_PREX_CD: object
+      SGPT_PATL_M_STAG_VL: object
+      SGPT_PATL_N_STAG_VL: object
+      SGPT_PATL_STAG_VL: object
+      SGPT_PATL_T_STAG_VL: object
+      SGPT_SRMG_DCTS_STAT_CD: object
+      SGPT_SRMG_PCTS_STAT_CD: object
+      SGPT_SRMG_RCTS_STAT_CD: object
+      SGPT_SRMV_LN_CNT: float32
+      SGPT_TUMR_BUDD_CD: object
+      SGPT_VNIN_CD: object
+      SGPT_ANIN_CD: object
+    CLRC_PT_BSNF:
+      BSPT_FRST_DIAG_CD: object
+      BSPT_FRST_DIAG_YMD: datetime64[ns]
+      BSPT_IDGN_AGE: float32
+      BSPT_M_STAG_VL: object
+      BSPT_N_STAG_VL: object
+      BSPT_SEX_CD: object
+      BSPT_STAG_VL: object
+      BSPT_T_STAG_VL: object
+      PT_SBST_NO: object
+    CLRC_TRTM_CASB:
+      CSTR_END_YMD: datetime64[ns]
+      CSTR_NT: float32
+      CSTR_PRPS_CD: object
+      CSTR_REGN_CD: object
+      CSTR_STRT_YMD: datetime64[ns]
+      PT_SBST_NO: object
+    CLRC_TRTM_RD:
+      PT_SBST_NO: object
+      RDT_END_YMD: datetime64[ns]
+      RDT_STRT_YMD: datetime64[ns]
+  
+  prefix : 
+    CLRC_PT_BSNF : PT_BSNF_
+    CLRC_EX_DIAG : EX_DIAG_
+    CLRC_OPRT_NFRM : OPRT_NFRM_
+    CLRC_PTH_BPSY : PTH_BPSY_
+    CLRC_PTH_MLCR : PTH_MLCR_
+    CLRC_PTH_SRGC : PTH_SRGC_
+    CLRC_TRTM_CASB : TRTM_CASB_
+    CLRC_TRTM_RD : TRTM_RD_
+    CLRC_DG_RCNF : DG_RCNF_
+    CLRC_PTH_MNTY : PTH_MNTY_
+    CLRC_DEAD_NFRM : DEAD_NFRM_
+
+  derivative : 
+    CLRC_OPRT_NFRM :
+      parent : [OPRT_CLCN_OPRT_KIND_CD, OPRT_CURA_RSCT_CD] 
+      child : [OPRT_CLCN_KIND_NM, OPRT_CURA_RSCT_NM]
+    CLRC_PTH_BPSY :
+      parent : [BPTH_CELL_DIFF_CD]
+      child : [BPTH_CELL_DIFF_NM]
+    CLRC_PTH_MLCR :
+      parent : [MLPT_MSIE_RSLT_CD, MLPT_KE2E_RSLT_CD, MLPT_KRES_RSLT_CD, MLPT_NREX_RSLT_CD, MLPT_BRME_RSLT_CD]
+      child : [MLPT_MSIE_RSLT_NM, MLPT_KE2E_RSLT_NM, MLPT_KRES_RSLT_NM, MLPT_NREX_RSLT_NM, MLPT_BRME_RSLT_NM]
+    CLRC_PTH_MNTY :
+      parent : [IMPT_HM1E_RSLT_CD, IMPT_HS2E_RSLT_CD, IMPT_HS6E_RSLT_CD, IMPT_HP2E_RSLT_CD]
+      child : [IMPT_HM1E_RSLT_NM, IMPT_HS2E_RSLT_NM, IMPT_HS6E_RSLT_NM, IMPT_HP2E_RSLT_NM]
+    CLRC_PTH_SRGC :
+      parent : [SGPT_CELL_DIFF_CD, SGPT_SRMG_PCTS_STAT_CD, SGPT_SRMG_DCTS_STAT_CD, SGPT_SRMG_RCTS_STAT_CD, SGPT_NERV_PREX_CD, SGPT_VNIN_CD,SGPT_ANIN_CD, SGPT_TUMR_BUDD_CD]
+      child : [SGPT_CELL_DIFF_NM, SGPT_SRMG_PCTS_STAT_NM, SGPT_SRMG_DCTS_STAT_NM, SGPT_SRMG_RCTS_STAT_NM, SGPT_NERV_PREX_NM, SGPT_VNIN_NM, SGPT_ANIN_NM, SGPT_TUMR_BUDD_NM]
+    CLRC_TRTM_CASB :
+      parent : [CSTR_REGN_CD, CSTR_PRPS_CD]
+      child : [CSTR_REGN_NM, CSTR_PRPS_NM]
+    CLRC_TRTM_RD :
+      parent : [RDT_SITD_CD]
+      child : [RDT_SITD_NM]
+
+
+  static_variable :
+    - BSPT_FRST_DIAG_CD
+    - BSPT_IDGN_AGE
+    - BSPT_M_STAG_VL
+    - BSPT_N_STAG_VL
+    - BSPT_T_STAG_VL
+    - BSPT_STAG_VL
+    - BSPT_SEX_CD
+  
+
+institution_specific_columns :
+  - CENTER_CD
+  - IRB_APRV_NO
+  - CRTN_DT
