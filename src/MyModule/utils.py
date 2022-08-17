@@ -4,6 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 import numpy as np
 from pathlib import Path
+import yaml
 import pickle
 
 def convert_dates(data, config, table_name):
@@ -36,4 +37,8 @@ def read_file(path : Path, file_name):
     else :
         return pd.read_pickle(path.joinpath(file_name))
 
-    
+def load_config():
+    project_dir = Path.cwd().parents[1]
+    conf_dir = project_dir.joinpath('conf')
+    with open(conf_dir.joinpath('config.yml')) as f:
+        return yaml.load(f, yaml.SafeLoader)
