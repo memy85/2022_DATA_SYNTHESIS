@@ -10,13 +10,31 @@ def continuous_value_ldp(original_data : array, epsilon):
     local differential privacy mechanism for continuous values
     leverages bounded laplace mechanism
     '''
-    check_is_na = lambda data : ~any(np.isnan(data))  
-    assert check_is_na(original_data), "there is a nan value"
+    check_is_na = lambda data : not any(np.isnan(data))  
+    assert check_is_na(original_data) , "there is a nan value"
     
     synthesized = tdp(original_data, epsilon)
     return synthesized
 
-def categorical_value_ldp(original_data, epsilon):
+def categorical_value_ldp(original_data : array, all_values : array, epsilon):
     '''
+    utilize randomized response to synthesize categorical variables
     '''
-    pass
+    dimension = len(all_values)
+    
+    def general_randomized_response(original_value):
+        if np.isnan(original_value):
+            mask = np.isnan(all_values)
+        else :
+            mask = original_value == all_values    
+        probs = mask.copy()
+        
+        probs[mask] = np.e**epsilon / (np.e**epsilon + dimension -1)
+        probs[~mask] = 1 / (np.e**epsilon + dimension -1)
+        
+        value = np.random.choice(all_values, 1, probs)
+        
+    grr = np.vectorize(general_randomized_response)
+    synthesized = grr(original_data)
+
+    return synthesized
