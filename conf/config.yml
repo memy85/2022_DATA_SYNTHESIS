@@ -114,39 +114,29 @@ data_config :
     CLRC_PTH_MNTY : PTH_MNTY_
     CLRC_DEAD_NFRM : DEAD_NFRM_
 
-  derivative : 
-    CLRC_OPRT_NFRM :
-      parent : [OPRT_CLCN_OPRT_KIND_CD, OPRT_CURA_RSCT_CD] 
-      child : [OPRT_CLCN_KIND_NM, OPRT_CURA_RSCT_NM]
-    CLRC_PTH_BPSY :
-      parent : [BPTH_CELL_DIFF_CD]
-      child : [BPTH_CELL_DIFF_NM]
-    CLRC_PTH_MLCR :
-      parent : [MLPT_MSIE_RSLT_CD, MLPT_KE2E_RSLT_CD, MLPT_KRES_RSLT_CD, MLPT_NREX_RSLT_CD, MLPT_BRME_RSLT_CD]
-      child : [MLPT_MSIE_RSLT_NM, MLPT_KE2E_RSLT_NM, MLPT_KRES_RSLT_NM, MLPT_NREX_RSLT_NM, MLPT_BRME_RSLT_NM]
-    CLRC_PTH_MNTY :
-      parent : [IMPT_HM1E_RSLT_CD, IMPT_HS2E_RSLT_CD, IMPT_HS6E_RSLT_CD, IMPT_HP2E_RSLT_CD]
-      child : [IMPT_HM1E_RSLT_NM, IMPT_HS2E_RSLT_NM, IMPT_HS6E_RSLT_NM, IMPT_HP2E_RSLT_NM]
-    CLRC_PTH_SRGC :
-      parent : [SGPT_CELL_DIFF_CD, SGPT_SRMG_PCTS_STAT_CD, SGPT_SRMG_DCTS_STAT_CD, SGPT_SRMG_RCTS_STAT_CD, SGPT_NERV_PREX_CD, SGPT_VNIN_CD,SGPT_ANIN_CD, SGPT_TUMR_BUDD_CD]
-      child : [SGPT_CELL_DIFF_NM, SGPT_SRMG_PCTS_STAT_NM, SGPT_SRMG_DCTS_STAT_NM, SGPT_SRMG_RCTS_STAT_NM, SGPT_NERV_PREX_NM, SGPT_VNIN_NM, SGPT_ANIN_NM, SGPT_TUMR_BUDD_NM]
-    CLRC_TRTM_CASB :
-      parent : [CSTR_REGN_CD, CSTR_PRPS_CD]
-      child : [CSTR_REGN_NM, CSTR_PRPS_NM]
-    CLRC_TRTM_RD :
-      parent : [RDT_SITD_CD]
-      child : [RDT_SITD_NM]
 
-
+# static variable 이 아니면 dynamic variable로 정의된다.
   static_variable :
-    - BSPT_FRST_DIAG_CD
-    - BSPT_IDGN_AGE
-    - BSPT_M_STAG_VL
-    - BSPT_N_STAG_VL
-    - BSPT_T_STAG_VL
-    - BSPT_STAG_VL
-    - BSPT_SEX_CD
-  
+    BSPT :      
+      - FRST_DIAG_CD
+      - IDGN_AGE
+      - M_STAG_VL
+      - N_STAG_VL
+      - T_STAG_VL
+      - STAG_VL
+      - SEX_CD
+
+    # variables that do not change
+  exclude_noise_variable :
+    - TIME
+    - PTH_BPSY
+    - PTH_MLCR
+    - PTH_MNTY
+    - PTH_SRGC
+
+  outcome_variable :
+    - RLPS
+    - DEAD
 
 institution_specific_columns :
   - CENTER_CD
