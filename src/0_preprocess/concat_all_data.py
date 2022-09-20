@@ -9,8 +9,6 @@ from functools import reduce
 
 with open('config.yml') as f:
     config = yaml.load(f, yaml.SafeLoader)
-
-
 os.sys.path.append(config['path_config']['project_path'])
 from src.MyModule.utils import *
 
@@ -164,12 +162,23 @@ days = all_concated.apply(lambda x : (x['TIME'] - g.iloc[x['PT_SBST_NO']]['TIME'
 
 all_concated['TIME'] = days
 
+# remove less than 30 days of
+#%%
+data_path = output_path.joinpath('0_preprocess')
+all_concated = read_file(data_path, 'D0.pkl')
 
 #%%
+less_than_30_days_obs = all_concated.groupby('PT_SBST_NO', as_index=False)['TIME'].max().query('TIME < 30')['PT_SBST_NO']
+print(f'less than 30 days of observation is {len(less_than_30_days_obs)}')
 
-all_concated
+over_10_years_obs = all_concated.groupby('PT_SBST_NO', as_index=False)['TIME'].max().query('TIME >= 3650')['PT_SBST_NO']
+print(f'over 10 years of observation is {len(over_10_years_obs)}')
 
 
+#%%
+exclude_patients = set(less_than_30_days_obs) | set(over_10_years_obs)
+
+all_concated = all_concated.query('PT_SBST_NO not in @exclude_patients')
 
 #%%
 if output_path.joinpath('0_preprocess').exists() :

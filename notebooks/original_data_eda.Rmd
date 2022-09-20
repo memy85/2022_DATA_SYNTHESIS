@@ -1,0 +1,10 @@
+
+
+## Original Data Eda
+### load packages
+```{R}
+library(here)
+library(tidyverse)
+library(reticulate)
+
+```

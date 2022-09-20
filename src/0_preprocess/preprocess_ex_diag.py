@@ -7,10 +7,10 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
+#%%
+config = load_config()
 os.sys.path.append(config['path_config']['project_path'])
-
+#%%
 from src.MyModule.utils import *
 
 table_name = 'clrc_ex_diag'
@@ -27,6 +27,10 @@ output_path = output_path.joinpath('0_preprocess')
 #%% load data
 ex_diag = read_file(input_path, file_name)
 
+#%%
+ex_diag['CEXM_NM'] = ex_diag.CEXM_NM.str.strip()
+
+
 #%%  read data
 ex_diag_required = ex_diag[columns.keys()].copy()
 
@@ -41,8 +45,6 @@ ex_diag_required['CEXM_RSLT_CONT'] = ex_diag_required['CEXM_RSLT_CONT'].astype('
 #%% convert dates
 ex_diag_required = convert_dates(ex_diag_required, config=config, table_name=table_name.upper())
 ex_diag_required = ex_diag_required.drop_duplicates()
-
-
 
 #%%
 ex_diag_required = ex_diag_required.rename(columns = {'CEXM_YMD':"TIME"})
