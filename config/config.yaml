@@ -6,7 +6,14 @@ path_config :
   output_path : /home/wonseok/2022_DATA_SYNTHESIS/data/processed
 
 random_seed : 42
-epsilon : 0
+epsilon : [0.1, 1, 10, 100, 1000]
+
+bayesian_config : 
+  degree_of_network : 2
+  number_of_tuples : 100
+  threshold_value : 20
+  mean_observation_days : 1280
+  sd_observation_days : 912
 
 file_name : 
   clrc_dg_rcnf : CLRC_DG_RCNF.xlsx
@@ -152,3 +159,4 @@ institution_specific_columns :
   - CENTER_CD
   - IRB_APRV_NO
   - CRTN_DT
+

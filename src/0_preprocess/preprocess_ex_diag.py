@@ -8,9 +8,10 @@ import numpy as np
 import os, sys
 
 #%%
-config = load_config()
+with open('config.yaml')  as f:
+    config = yaml.load(f, yaml.SafeLoader)
 os.sys.path.append(config['path_config']['project_path'])
-#%%
+
 from src.MyModule.utils import *
 
 table_name = 'clrc_ex_diag'

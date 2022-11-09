@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yml')  as f:
+with open('config.yaml')  as f:
     config = yaml.load(f, yaml.SafeLoader)
 os.sys.path.append(config['path_config']['project_path'])
 
@@ -43,7 +43,7 @@ nfrm_required = nfrm_required.set_index(['PT_SBST_NO','TIME'])
 nfrm_required['DEAD'] = 1
 
 #%%
-
+nfrm_required = nfrm_required.astype({"DEAD":"object"})
 
 #%%
 nfrm_final = nfrm_required.copy()

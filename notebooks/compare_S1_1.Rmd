@@ -1,0 +1,112 @@
+---
+title : S1에 대한 분석자료
+분석 연구원 : 장원석
+date : 11/10/2022
+---
+
+```{R}
+library(tidyverse)
+library(ggplot2)
+library(hrbrthemes)
+library(here)
+
+
+input_path <- here('data/processed/notebooks')
+output_path <- here('data/processed/notebooks')
+```
+## Load Data
+```{R}
+D0 = read_csv(here(input_path, 'D0.csv'))
+S1 = read_csv(here(input_path, 'S1.csv'))
+
+D0 %>% dim
+S1 %>% dim
+
+D0['TAG'] = 'd0'
+S1['TAG'] = 's1'
+
+
+binded <- rbind(D0, S1)
+```
+
+## Data EDA
+
+```{R}
+# sex
+
+sex <- binded %>% 
+        select(c(PT_SBST_NO,PT_BSNF_BSPT_SEX_CD, TAG)) %>%
+        unique()
+
+sex_counts <- sex %>% select(c(TAG,PT_BSNF_BSPT_SEX_CD)) %>% 
+    group_by(TAG) %>%
+    count(PT_BSNF_BSPT_SEX_CD) %>%
+     mutate(
+    per = n/sum(n)
+)
+
+sex_counts
+
+sex_counts %>%
+    ggplot(aes(x=as.factor(PT_BSNF_BSPT_SEX_CD), y=per, fill=TAG, color=TAG)) +
+        geom_bar(position='dodge', stat='identity') +
+        theme_ipsum() + 
+        facet_wrap(~TAG) 
+
+# age
+binded %>%
+    ggplot(aes(x=PT_BSNF_BSPT_IDGN_AGE, fill=TAG, color=TAG)) +
+        geom_density(adjust=1.5) +
+        theme_ipsum() + 
+        facet_wrap(~TAG) 
+
+# first diagnosis code
+
+fdc <- binded %>% 
+        select(c(PT_SBST_NO,PT_BSNF_BSPT_FRST_DIAG_CD, TAG)) %>%
+        unique()
+
+fdc_counts <- fdc %>% select(c(TAG,PT_BSNF_BSPT_FRST_DIAG_CD)) %>% 
+    group_by(TAG) %>%
+    count(PT_BSNF_BSPT_FRST_DIAG_CD) %>%
+     mutate(
+    per = n/sum(n)
+)
+
+fdc_counts %>%
+    ggplot(aes(x=as.factor(PT_BSNF_BSPT_FRST_DIAG_CD), y=per, fill=TAG, color=TAG)) +
+        geom_bar(position='dodge', stat='identity') +
+        theme_ipsum() + 
+        facet_wrap(~TAG) 
+
+
+```
+
+```{R}
+
+cea<- binded %>% 
+    select(c(TAG, EX_DIAG_CEA)) %>%
+    na.omit()
+
+cea$EX_DIAG_CEA <- log(cea$EX_DIAG_CEA)
+
+par(mfrow=(c(2,1)))
+cea %>%
+    filter(TAG=='d0') %>%
+    ggplot(aes(x=EX_DIAG_CEA, fill=TAG)) +
+        geom_histogram(alpha=0.5, position='identity', )
+
+cea %>%
+    filter(TAG=='s1') %>%
+    ggplot(aes(x=EX_DIAG_CEA, fill=TAG)) +
+        geom_histogram(alpha=0.5, position='identity',fill='blue')
+
+```
+
+
+```{R}
+
+S1$PT_SBST_NO %>% max()
+
+
+```

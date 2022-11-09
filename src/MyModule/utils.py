@@ -38,7 +38,9 @@ def read_file(path : Path, file_name):
         return pd.read_pickle(path.joinpath(file_name))
 
 def load_config():
-    project_dir = Path.cwd().parents[1]
-    conf_dir = project_dir.joinpath('conf')
-    with open(conf_dir.joinpath('config.yml')) as f:
+    project_dir = Path(__file__).parents[2]
+    conf_dir = project_dir.joinpath('config')
+    with open(conf_dir.joinpath('config.yaml')) as f:
         return yaml.load(f, yaml.SafeLoader)
+    
+

@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yml')  as f:
+with open('config.yaml')  as f:
     config = yaml.load(f, yaml.SafeLoader)
 os.sys.path.append(config['path_config']['project_path'])
 

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yml')  as f:
+with open('config.yaml')  as f:
     config = yaml.load(f, yaml.SafeLoader)
 os.sys.path.append(config['path_config']['project_path'])
 
@@ -47,6 +47,8 @@ print(f'duplicated_counts : {duplicated_counts}')
 rcnf_final = rcnf_required.set_index(['PT_SBST_NO','TIME'])
 
 rcnf_final['RLPS'] = 1
+
+rcnf_final = rcnf_final.astype({'RLPS':'object'})
 
 #%%
 rcnf_final = rcnf_final.add_prefix(prefix)

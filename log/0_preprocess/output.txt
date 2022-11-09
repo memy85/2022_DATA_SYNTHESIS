@@ -68,3 +68,197 @@ Check Duplicates Once Again
 the maximum record is 2177
 the minimum record is 1
 the median record is 30.0
+Thu Oct  6 19:36:47 KST 2022
+======================= preprocessing dg_rcnf ========================
+duplicated_counts : 0
+======================= preprocessing ex_diag ========================
+======================= preprocessing oprt_nfrm ========================
+duplicated_counts : 0
+======================= preprocessing pth_bpsy ========================
+duplicated_counts : 0
+======================= preprocessing pth_mlcr ========================
+duplicated_counts : 0
+======================= preprocessing pth_mnty ========================
+duplicated_counts : 0
+======================= preprocessing pth_srgc ========================
+duplicated_counts : 0
+======================= preprocessing pt_bsnf ========================
+duplicated_counts : 0
+======================= preprocessing trtm_casb ========================
+duplicated_counts : 0
+======================= preprocessing trtm_rd ========================
+duplicated_counts : 0
+======================= preprocessing dead_nfrm ========================
+duplicated_counts : 0
+======================= concating all the output =======================
+Check Duplicates Once Again
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+the maximum record is 2177
+the minimum record is 1
+the median record is 30.0
+Traceback (most recent call last):
+  File "src/0_preprocess/concat_all_data.py", line 161, in <module>
+    days = all_concated.apply(lambda x : (x['TIME'] - g.iloc[x['PT_SBST_NO']]['TIME']).days, axis=1)
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/frame.py", line 8839, in apply
+    return op.apply().__finalize__(self, method="apply")
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/apply.py", line 727, in apply
+    return self.apply_standard()
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/apply.py", line 851, in apply_standard
+    results, res_index = self.apply_series_generator()
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/apply.py", line 867, in apply_series_generator
+    results[i] = self.f(v)
+  File "src/0_preprocess/concat_all_data.py", line 161, in <lambda>
+    days = all_concated.apply(lambda x : (x['TIME'] - g.iloc[x['PT_SBST_NO']]['TIME']).days, axis=1)
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/indexing.py", line 967, in __getitem__
+    return self._getitem_axis(maybe_callable, axis=axis)
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/indexing.py", line 1522, in _getitem_axis
+    return self.obj._ixs(key, axis=axis)
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/frame.py", line 3424, in _ixs
+    new_values = self._mgr.fast_xs(i)
+  File "/home/wonseok/.pyenv/versions/synthetic_data/lib/python3.8/site-packages/pandas/core/internals/managers.py", line 1011, in fast_xs
+    for i, rl in enumerate(blk.mgr_locs):
+KeyboardInterrupt
+Thu Oct  6 19:49:50 KST 2022
+======================= preprocessing dg_rcnf ========================
+duplicated_counts : 0
+======================= preprocessing ex_diag ========================
+duplicated_counts : 8851887
+======================= preprocessing oprt_nfrm ========================
+duplicated_counts : 0
+======================= preprocessing pth_bpsy ========================
+duplicated_counts : 0
+======================= preprocessing pth_mlcr ========================
+duplicated_counts : 0
+======================= preprocessing pth_mnty ========================
+duplicated_counts : 0
+======================= preprocessing pth_srgc ========================
+duplicated_counts : 0
+======================= preprocessing pt_bsnf ========================
+duplicated_counts : 0
+======================= preprocessing trtm_casb ========================
+2022. 10. 06. (목) 19:54:00 KST
+======================= preprocessing dg_rcnf ========================
+duplicated_counts : 0
+======================= preprocessing ex_diag ========================
+duplicated_counts : 8851887
+======================= preprocessing oprt_nfrm ========================
+duplicated_counts : 0
+======================= preprocessing pth_bpsy ========================
+duplicated_counts : 0
+======================= preprocessing pth_mlcr ========================
+duplicated_counts : 0
+======================= preprocessing pth_mnty ========================
+duplicated_counts : 0
+======================= preprocessing pth_srgc ========================
+duplicated_counts : 0
+======================= preprocessing pt_bsnf ========================
+duplicated_counts : 0
+======================= preprocessing trtm_casb ========================
+duplicated_counts : 0
+======================= preprocessing trtm_rd ========================
+duplicated_counts : 0
+======================= preprocessing dead_nfrm ========================
+duplicated_counts : 0
+======================= concating all the output =======================
+Check Duplicates Once Again
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+the maximum record is 2177
+the minimum record is 1
+the median record is 30.0
+less than 30 days of observation is 0
+over 10 years of observation is 0
+Fri Oct  7 11:16:50 KST 2022
+======================= preprocessing dg_rcnf ========================
+Fri Oct  7 14:04:57 KST 2022
+======================= preprocessing dg_rcnf ========================
+duplicated_counts : 0
+======================= preprocessing ex_diag ========================
+duplicated_counts : 8851887
+======================= preprocessing oprt_nfrm ========================
+duplicated_counts : 0
+======================= preprocessing pth_bpsy ========================
+duplicated_counts : 0
+======================= preprocessing pth_mlcr ========================
+duplicated_counts : 0
+======================= preprocessing pth_mnty ========================
+duplicated_counts : 0
+======================= preprocessing pth_srgc ========================
+duplicated_counts : 0
+======================= preprocessing pt_bsnf ========================
+duplicated_counts : 0
+======================= preprocessing trtm_casb ========================
+duplicated_counts : 0
+======================= preprocessing trtm_rd ========================
+duplicated_counts : 0
+======================= preprocessing dead_nfrm ========================
+duplicated_counts : 0
+======================= concating all the output =======================
+Check Duplicates Once Again
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+the maximum record is 2177
+the minimum record is 1
+the median record is 30.0
+less than 30 days of observation is 291
+over 10 years of observation is 403
+Fri Oct  7 14:41:05 KST 2022
+======================= preprocessing dg_rcnf ========================
+duplicated_counts : 0
+======================= preprocessing ex_diag ========================
+duplicated_counts : 8851887
+======================= preprocessing oprt_nfrm ========================
+duplicated_counts : 0
+======================= preprocessing pth_bpsy ========================
+duplicated_counts : 0
+======================= preprocessing pth_mlcr ========================
+duplicated_counts : 0
+======================= preprocessing pth_mnty ========================
+duplicated_counts : 0
+======================= preprocessing pth_srgc ========================
+duplicated_counts : 0
+======================= preprocessing pt_bsnf ========================
+duplicated_counts : 0
+======================= preprocessing trtm_casb ========================
+duplicated_counts : 0
+======================= preprocessing trtm_rd ========================
+duplicated_counts : 0
+======================= preprocessing dead_nfrm ========================
+duplicated_counts : 0
+======================= concating all the output =======================
+Check Duplicates Once Again
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+the maximum record is 2177
+the minimum record is 1
+the median record is 30.0
+less than 30 days of observation is 291
+over 10 years of observation is 403
+Fri Oct  7 16:18:19 KST 2022
+======================= preprocessing dg_rcnf ========================
+duplicated_counts : 0
+======================= preprocessing ex_diag ========================
+duplicated_counts : 8851887
+======================= preprocessing oprt_nfrm ========================
+duplicated_counts : 0
+======================= preprocessing pth_bpsy ========================
+duplicated_counts : 0
+======================= preprocessing pth_mlcr ========================
+duplicated_counts : 0
+======================= preprocessing pth_mnty ========================
+duplicated_counts : 0
+======================= preprocessing pth_srgc ========================
+duplicated_counts : 0
+======================= preprocessing pt_bsnf ========================
+duplicated_counts : 0
+======================= preprocessing trtm_casb ========================
+duplicated_counts : 0
+======================= preprocessing trtm_rd ========================
+duplicated_counts : 0
+======================= preprocessing dead_nfrm ========================
+duplicated_counts : 0
+======================= concating all the output =======================
+Check Duplicates Once Again
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+the maximum record is 2177
+the minimum record is 1
+the median record is 30.0
+less than 30 days of observation is 291
+over 10 years of observation is 403
