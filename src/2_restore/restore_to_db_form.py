@@ -40,7 +40,7 @@ def get_data_by_table_name(s1, table_name):
 
 def save_table(table, table_name, epsilon):
     
-    table.to_pickle(OUTPUT_PATH.joinpath(f'{table_name}_{epsilon}.pkl'))
+    table.to_csv(OUTPUT_PATH.joinpath(f'{table_name}_{epsilon}.csv'), index=False)
     
     pass
 

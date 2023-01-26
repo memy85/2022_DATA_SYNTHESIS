@@ -23,7 +23,7 @@ file_name = "CLRC_DG_RCNF"
 
 # %%
 def load_file_epsilon(epsilon):
-    return read_file(INPUT_PATH, f'{file_name}_{epsilon}.pkl')
+    return read_file(INPUT_PATH, f'{file_name}_{epsilon}.csv')
 
 
 def main():

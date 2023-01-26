@@ -1,23 +1,36 @@
 #!/bin/bash
 
 echo "================ start process number : 0 ================="
-echo "---------------- prepare_data. producing D0.pkl ...."
-sh 0_prepare_data.sh
+# echo "---------------- prepare_data. producing D0.pkl ...."
+# sh 0_prepare_data.sh
 
-echo "finished preprocessing stage. made D0.pkl"
-echo "if there is an issue, please check the logs"
+# echo "finished preprocessing stage. made D0.pkl"
+# echo "if there is an issue, please check the logs"
 
-echo "================ start process number : 1 ================="
-python3 src/1_apply_bayesian/preprocess_data.py
-echo "finished "
-python3 src/1_apply_bayesian/apply_bayesian.py
-echo "produced data"
-python3 src/1_apply_bayesian/produce_data.py --epsilon 1 --multiplier 5  --sample TRUE --sample_number 50
+# echo "================ start process number : 1 ================="
+# python3 src/1_apply_bayesian/preprocess_data.py
+# echo "finished "
+# python3 src/1_apply_bayesian/apply_bayesian.py
+# echo "produced data"
+# python3 src/1_apply_bayesian/produce_data.py --epsilon 1 --multiplier 5  --sample TRUE --sample_number 50
 
 echo "================ start process number : 2 ================="
-python3 src/2_restore/to_s1.py --epsilon 1
-echo "finished "
-python3 src/2_restore/restore_to_s1.py
-python3 src/2_restore/restore_to_db_form.py
+# python3 src/2_restore/to_s1.py --epsilon 1
+# echo "finished "
+# python3 src/2_restore/restore_to_s1.py
+python3 src/2_restore/restore_to_db_form.py  --epsilon 0.1
+python3 src/2_restore/restore_to_db_form.py  --epsilon 1
+python3 src/2_restore/restore_to_db_form.py  --epsilon 10
+python3 src/2_restore/restore_to_db_form.py  --epsilon 100
+python3 src/2_restore/restore_to_db_form.py  --epsilon 1000
+
+
+# echo "================ make death data : 3 ================="
+
+# python3 src/4_evaluate/make_death.py --epsilon 0.1
+# python3 src/4_evaluate/make_death.py --epsilon 1
+# python3 src/4_evaluate/make_death.py --epsilon 10
+# python3 src/4_evaluate/make_death.py --epsilon 100
+# python3 src/4_evaluate/make_death.py --epsilon 1000
 
 

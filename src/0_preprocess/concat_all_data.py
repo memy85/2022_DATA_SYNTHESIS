@@ -7,11 +7,13 @@ import os
 import re
 from functools import reduce
 
-with open('config.yaml') as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+
+config = load_config()
 
 project_path = Path(config['path_config']['project_path'])
 input_path = Path(config['path_config']['input_path'])
@@ -91,11 +93,10 @@ def set_dtypes(col:pd.Series=None, col_name=None):
     col = col.astype(data_type)
     
     return col
+
 #%%
-
-all_concated['DG_RCNF_RLPS'] = all_concated['DG_RCNF_RLPS'].astype('float32')
-all_concated['DEAD_NFRM_DEAD'] = all_concated['DEAD_NFRM_DEAD'].astype('float32')
-
+all_concated['DG_RCNF_RLPS']= all_concated['DG_RCNF_RLPS'].fillna(0)
+all_concated['DEAD_NFRM_DEAD']= all_concated['DEAD_NFRM_DEAD'].fillna(0)
 
 #%%
 object_columns = all_concated.select_dtypes('object')
@@ -122,32 +123,9 @@ for name, col in all_concated.iteritems():
         continue 
     all_concated[name] = set_dtypes(col, name)
 
-#%% 
-# Forward Bacward fill ExDiag table
-
-fill = all_concated.filter(regex="EX_DIAG|PT_SBST_NO").groupby(['PT_SBST_NO'],as_index=False).transform(lambda v : v.ffill())
-msk = all_concated.columns.str.contains('EX_DIAG_')
-all_concated[all_concated.columns[msk]]=fill
-
-
-#%%
-frst_ymd = all_concated['PT_BSNF_BSPT_FRST_DIAG_YMD']
-
-fill = all_concated.filter(regex="PT_BSNF|PT_SBST_NO").groupby(['PT_SBST_NO'], as_index=False).transform(lambda v : v.ffill().bfill())
-msk = all_concated.columns.str.contains('PT_BSNF_')
-all_concated[all_concated.columns[msk]] = fill
-
-
-#%%
-all_concated['PT_BSNF_BSPT_FRST_DIAG_YMD'] = frst_ymd
-
-#%%
-all_concated = all_concated.fillna({'DG_RCNF_RLPS':0, 'DEAD_NFRM_DEAD':0})
-
 #%%
 change2objectdtype = all_concated.filter(regex='RLPS|DEAD').columns.tolist()
 book = {k:"object" for k in change2objectdtype}
-
 
 #%%
 all_concated = all_concated.astype(book)
@@ -168,11 +146,12 @@ all_concated = all_concated.sort_values(by=['PT_SBST_NO','TIME'])
 #%%
 g = all_concated.groupby(['PT_SBST_NO'], as_index=False).TIME.min()
 
-
 #%%
 days = all_concated.apply(lambda x : (x['TIME'] - g.iloc[x['PT_SBST_NO']]['TIME']).days, axis=1)
 
 all_concated['TIME'] = days
+
+
 
 #%%
 less_than_30_days_obs = all_concated.groupby('PT_SBST_NO', as_index=False)['TIME'].max().query('TIME < 30')['PT_SBST_NO']

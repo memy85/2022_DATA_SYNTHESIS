@@ -7,11 +7,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_pth_bpsy'
 file_name = config['file_name'][table_name]
@@ -34,8 +34,6 @@ bpsy_required = pth_bpsy[columns.keys()]
 #%%
 bpsy_required = convert_dates(bpsy_required, config, table_name.upper())
 
-#%%
-bpsy_required = remove_invalid_values(bpsy_required)
 
 #%%
 bpsy_required = bpsy_required.rename(columns = {'BPTH_ACPT_YMD':'TIME'})

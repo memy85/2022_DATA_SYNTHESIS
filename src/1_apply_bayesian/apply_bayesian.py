@@ -71,10 +71,6 @@ def create_bayesian(name, epsilon):
                                                         attribute_to_is_categorical=cats,
                                                         attribute_to_is_candidate_key=candidate_keys)
     describer.save_dataset_description_to_file(description_file)
-    
-    generator = DataGenerator()
-    generator.generate_dataset_in_correlated_attribute_mode(num_tuples_to_generate, description_file)
-    generator.save_synthetic_data(synthetic_data)
     return
 
 

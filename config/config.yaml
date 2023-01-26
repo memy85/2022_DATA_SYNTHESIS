@@ -45,47 +45,47 @@ data_config :
       CEXM_YMD: datetime64[ns]
       PT_SBST_NO: object
     CLRC_OPRT_NFRM:
-      OPRT_CLCN_OPRT_KIND_CD: object
-      OPRT_CURA_RSCT_CD: object
+      OPRT_CLCN_OPRT_KIND_NM: object
+      OPRT_CURA_RSCT_NM: object
       OPRT_YMD: datetime64[ns]
       PT_SBST_NO: object
     CLRC_PTH_BPSY:
       BPTH_ACPT_YMD: datetime64[ns]
       BPTH_BPSY_RSLT_CONT: object
-      BPTH_CELL_DIFF_CD: object
+      BPTH_CELL_DIFF_NM: object
       PT_SBST_NO: object
     CLRC_PTH_MLCR:
       MLPT_ACPT_YMD: datetime64[ns]
-      MLPT_BRME_RSLT_CD: object
-      MLPT_KE2E_RSLT_CD: object
-      MLPT_KRES_RSLT_CD: object
-      MLPT_MSIE_RSLT_CD: object
-      MLPT_NREX_RSLT_CD: object
+      MLPT_BRME_RSLT_NM: object
+      MLPT_KE2E_RSLT_NM: object
+      MLPT_KRES_RSLT_NM: object
+      MLPT_MSIE_RSLT_NM: object
+      MLPT_NREX_RSLT_NM: object
       PT_SBST_NO: object
     CLRC_PTH_MNTY:
       IMPT_ACPT_YMD: datetime64[ns]
-      IMPT_HM1E_RSLT_CD: object
-      IMPT_HP2E_RSLT_CD: object
-      IMPT_HS2E_RSLT_CD: object
-      IMPT_HS6E_RSLT_CD: object
+      IMPT_HM1E_RSLT_NM: object
+      IMPT_HP2E_RSLT_NM: object
+      IMPT_HS2E_RSLT_NM: object
+      IMPT_HS6E_RSLT_NM: object
       PT_SBST_NO: object
     CLRC_PTH_SRGC:
       PT_SBST_NO: object
       SGPT_ACPT_YMD: datetime64[ns]
-      SGPT_CELL_DIFF_CD: object
+      SGPT_CELL_DIFF_NM: object
       SGPT_MTST_LN_CNT: float32
-      SGPT_NERV_PREX_CD: object
+      SGPT_NERV_PREX_NM: object
       SGPT_PATL_M_STAG_VL: object
       SGPT_PATL_N_STAG_VL: object
-      SGPT_PATL_STAG_VL: object
       SGPT_PATL_T_STAG_VL: object
-      SGPT_SRMG_DCTS_STAT_CD: object
-      SGPT_SRMG_PCTS_STAT_CD: object
-      SGPT_SRMG_RCTS_STAT_CD: object
+      SGPT_PATL_STAG_VL: object
+      SGPT_SRMG_DCTS_STAT_NM: object
+      SGPT_SRMG_PCTS_STAT_NM: object
+      SGPT_SRMG_RCTS_STAT_NM: object
       SGPT_SRMV_LN_CNT: float32
-      SGPT_TUMR_BUDD_CD: object
-      SGPT_VNIN_CD: object
-      SGPT_ANIN_CD: object
+      SGPT_TUMR_BUDD_NM: object
+      SGPT_VNIN_NM: object
+      SGPT_ANIN_NM: object
     CLRC_PT_BSNF:
       BSPT_FRST_DIAG_CD: object
       BSPT_FRST_DIAG_YMD: datetime64[ns]
@@ -99,13 +99,12 @@ data_config :
     CLRC_TRTM_CASB:
       CSTR_END_YMD: datetime64[ns]
       CSTR_NT: float32
-      CSTR_PRPS_CD: object
-      CSTR_REGN_CD: object
+      CSTR_PRPS_NM: object
+      CSTR_REGN_NM: object
       CSTR_STRT_YMD: datetime64[ns]
       PT_SBST_NO: object
     CLRC_TRTM_RD:
       PT_SBST_NO: object
-      RDT_END_YMD: datetime64[ns]
       RDT_STRT_YMD: datetime64[ns]
   
   prefix : 
@@ -145,15 +144,167 @@ data_config :
       child : [RDT_SITD_NM]
 
 
-  static_variable :
-    - BSPT_FRST_DIAG_CD
-    - BSPT_IDGN_AGE
-    - BSPT_M_STAG_VL
-    - BSPT_N_STAG_VL
-    - BSPT_T_STAG_VL
-    - BSPT_STAG_VL
-    - BSPT_SEX_CD
+encodings :
+  CLRC_OPRT_NFRM :
+    OPRT_CLCN_OPRT_KIND_NM : 
+      결장절제술 : 1          
+      반흔허니아근본수술 : 2
+      소장절제술 : 3          
+      장 및 장간막 손상수술 : 4
+      장간막종양적출술 : 5
+      장관유착박리술 : 6
+      장루조성술 : 7          
+      장루폐쇄술 : 8          
+      장문합술 : 9            
+      장폐색증수술 : 10         
+      직장 및 에스장절제술 : 11
+      직장종양 절제술 : 12     
+      직장항문 주위농양수술 : 13
+      진단적개복술 : 14        
+      충수절제술 : 15         
+      후복막종양적출술 : 16
+      기타 : 99
+    OPRT_CURA_RSCT_NM : 
+      해당없음 : 1
+      curative : 2
+      palliative : 3
+      Other : 9
   
+  CLRC_PTH_BPSY :
+    BPTH_CELL_DIFF_NM : 
+      Adenocarcinoma, WD : 1
+      Adenocarcinoma, MD : 2
+      Adenocarcinoma, PD : 3
+      Mucinous ca : 4
+      Carcinoid : 5
+      Other : 99
+  
+  CLRC_PTH_MLCR :
+    MLPT_MSIE_RSLT_NM : 
+      stable : 1
+      low : 2
+      high : 3
+      Other : 9
+    MLPT_KE2E_RSLT_NM : 
+      not detected : 1
+      detected : 2
+      Other : 9
+    MLPT_KRES_RSLT_NM : 
+      not detected : 1
+      detected : 2
+      Other : 9
+    MLPT_NREX_RSLT_NM :
+      not detected : 1
+      detected : 2
+      Other : 9      
+    MLPT_BRME_RSLT_NM : 
+      not detected : 1
+      detected : 2
+      Other : 9
+  
+  CLRC_PTH_MNTY : 
+    IMPT_HM1E_RSLT_NM : 
+      loss : 1 
+      intact : 2
+      Other : 9
+    IMPP_HS2E_RSLT_NM : 
+      loss : 1 
+      intact : 2
+      Other : 9
+    IMPT_HS6E_RSLT_NM : 
+      loss : 1 
+      intact : 2
+      Other : 9
+    IMPT_HP2E_RSLT_NM : 
+      loss : 1 
+      intact : 2
+      Other : 9
+  
+  CLRC_PTH_SRGC : 
+    SGPT_CELL_DIFF_NM : 
+      Adenocarcinomar, WD : 1
+      Adenocarcinoma, MD : 2
+      Adenocarcinoma, PD : 3
+      Mucinous ca : 4
+      Carcinoid : 5
+      Other : 99
+    
+    SGPT_SRMG_PCTS_STAT_NM :
+      involved : 1
+      uninvolved : 2
+      indeterminate : 3
+      Other : 9
+    
+    SGPT_SRMG_DCTS_STAT_NM :
+      involved : 1
+      uninvolved : 2
+      indeterminate : 3
+      Other : 9
+
+    SGPT_SRMG_RCTS_STAT_NM :
+      involved : 1
+      uninvolved : 2
+      indeterminate : 3
+      Other : 9
+
+    SGPT_NERV_PREX_NM :
+      present : 1
+      absent : 2
+      not identified : 3
+      no record : 4
+      Other : 9
+
+    SGPT_VNIN_NM :
+      present : 1
+      absent : 2
+      not identified : 3
+      no record : 4
+      Other : 9
+    
+    SGPT_ANIN_NM :
+      present : 1
+      absent : 2
+      not identified : 3
+      no record : 4
+      Other : 9
+
+    SGPT_TUMR_BUDD_NM :
+      present : 1
+      absent : 2
+      not identified : 3
+      no record : 4
+      Other : 9
+  
+  CLRC_TRTM_CASB:
+    
+    CSTR_REGN_NM : 
+      none : 1
+      5-FU ± leucovorin : 2
+      capecitabline : 3
+      S-1 : 4
+      UFT ± leucovorin : 5
+      avastin + fluoropyrimidine(FL/X/UFT/S-1) : 6
+      FOLFOX : 7
+      FOLFOX + AVASTIN : 8
+      FOLFOX + ERBITUX : 9
+      XELOX : 10
+      XELOX + AVASTIN : 11
+      XELOX + ERBITUX : 12
+      FOLFIRI : 13
+      FOLFIRI + AVASTIN : 14
+      FOLFIRI + ERBITUX : 15
+      Other : 99
+    
+    CSTR_PRPS_NM :
+      Neo-adjuvant : 1
+      Adjuvant : 2
+      Palliative : 3 
+      Concurrent : 4
+      Induction : 5
+      Maintenance : 6 
+      Salvage : 7
+      Consolidation : 8
+      Other : 99
 
 institution_specific_columns :
   - CENTER_CD

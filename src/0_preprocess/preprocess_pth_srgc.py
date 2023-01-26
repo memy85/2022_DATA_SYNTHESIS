@@ -7,11 +7,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_pth_srgc'
 file_name = config['file_name'][table_name]
@@ -33,9 +33,6 @@ srgc_required = pth_srgc[columns.keys()]
 
 #%%
 srgc_required = convert_dates(srgc_required, config, table_name.upper())
-
-#%% 
-srgc_required = remove_invalid_values(srgc_required)
 
 #%%
 srgc_required = srgc_required.rename(columns = {'SGPT_ACPT_YMD':'TIME'})

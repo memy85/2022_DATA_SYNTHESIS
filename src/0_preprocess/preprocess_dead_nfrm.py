@@ -6,11 +6,13 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+
+config = load_config()
 
 table_name = 'clrc_dead_nfrm'
 file_name = config['file_name'][table_name]
@@ -37,10 +39,13 @@ nfrm_required = nfrm_required.rename(columns = {'DEAD_YMD':'TIME'})
 
 duplicated_counts = nfrm_required[['PT_SBST_NO','TIME']].duplicated().sum()
 print(f'duplicated_counts : {duplicated_counts}')
+
+
 #%%
 nfrm_required = nfrm_required.set_index(['PT_SBST_NO','TIME'])
 
 nfrm_required['DEAD'] = 1
+
 
 #%%
 nfrm_required = nfrm_required.astype({"DEAD":"object"})
@@ -52,3 +57,5 @@ nfrm_final = nfrm_final.add_prefix(prefix)
 
 #%%
 nfrm_final.to_pickle(output_path.joinpath('clrc_dead_nfrm.pkl'))
+
+# %%
