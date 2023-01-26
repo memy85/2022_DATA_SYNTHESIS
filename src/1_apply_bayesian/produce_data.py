@@ -44,32 +44,43 @@ def generate_data(epsilon, description_idx, sample_number):
     # the outcome : Recur (DG_RCNF), DEATH (DEAD) should be the same
     original_data_path = PROJ_PATH.joinpath(f'data/processed/1_apply_bayesian/preprocess_data/pt_{description_idx}.csv')
     original_data = pd.read_csv(original_data_path)
+    original_data = original_data.reset_index(drop=True)
+    time_idx = original_data['TIME']
+    max_time = max(time_idx)
 
-    if original_data['DEAD_NFRM_DEAD'].sum() > 0 :
-        row = original_data.query('DEAD_NFRM_DEAD == 1')
-        death_time = row['TIME']
-    
-    if original_data['DG_RCNF_RLPS'].sum() > 0 : 
-        row = original_data.query('DG_RCNF_RLPS == 1')
-        relapse_time = row['TIME']
-    
     path = INPUT_PATH.joinpath(f'epsilon{epsilon}').joinpath(f'description_{description_idx}.json')
     
     # BN generator 생성
     generator = DataGenerator()
-    generator.generate_dataset_in_correlated_attribute_mode(num_tuples, path)
+    generator.generate_dataset_in_correlated_attribute_mode(max_time, path)
     df = generator.synthetic_dataset
     
-    try :
-        # index = min(df[df.DEAD_NFRM_DEAD == 1].index.values)
-        # df = df.loc[0:index,]
-        
-        df.loc[death_time, "TIME"] = death_time
-        # 여기서 데이터 합성 완성해야 한다. 
-        # df
-    except :
-        pass
+    # time 선별
+    df = df[df.TIME.isin(time_idx)].copy().reset_index(drop=True)
     
+    # DG_RCNF, DEAD 1 인 기록은 삭제
+    df['DEAD_NFRM_DEAD'] = 0
+    df['DG_RCNF_RLPS'] = 0 
+    
+    if original_data['DEAD_NFRM_DEAD'].sum() > 0 :
+        death_time = original_data[original_data.DEAD_NFRM_DEAD == 1]['TIME'].to_list()[0]
+        death_time = random.sample(range(death_time-5, death_time+5), 1)[0]
+        
+        new_row = pd.DataFrame([{"PT_SBST_NO": sample_number, "TIME": death_time, "DEAD_NFRM_DEAD": 1.0}])
+        df = pd.concat([df, new_row])
+    
+    if original_data['DG_RCNF_RLPS'].sum() > 0 : 
+        relapse_time = original_data[original_data.DG_RCNF_RLPS == 1]['TIME'].to_list()
+        for time in relapse_time:
+            time = random.sample(range(time-5, time+5), 1)[0]
+            new_row = pd.DataFrame([{"PT_SBST_NO": sample_number, "TIME": time, "DG_RCNF_RLPS": 1.0}])
+            df = pd.concat([df, new_row])
+    
+    df = df.sort_values(by="TIME")
+    df = df.reset_index(drop=True)
+    index = min(df[df.DEAD_NFRM_DEAD == 1].index.values)
+    df = df.loc[0:index,].copy()
+
     df.to_pickle(output_path.joinpath(f'synthetic_data_{sample_number}.pkl'))
 
 
@@ -87,10 +98,10 @@ def return_description_files(path : Path):
 #%%
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epsilon','-e', help='choose the epsilon')
-    parser.add_argument('--multiplier', '-m', help='how much time to resample the data')
-    parser.add_argument('--sample', '-s', default=False,help='whether you are going to sample')
-    parser.add_argument('--sample_number', '-sn', default=0, help='how much you are going to sample')
+    parser.add_argument('--epsilon','-e', type=float, help='choose the epsilon')
+    parser.add_argument('--multiplier', '-m', type=int ,help='how much time to resample the data')
+    parser.add_argument('--sample', '-s', type=bool, default=False,help='whether you are going to sample')
+    parser.add_argument('--sample_number', '-sn', type=int, default=0, help='how much you are going to sample')
     
     args = parser.parse_args()
     
@@ -98,11 +109,12 @@ def main():
     files = return_description_files(INPUT_PATH.joinpath(f'epsilon{args.epsilon}'))
     if args.sample :
         files = random.sample(files, args.sample_number)
+        files = files*args.multiplier
         
-    pseudo_patient_id = [for i in range(0, args['multiplier']*len(files))]
+    pseudo_patient_id = [i for i in range(0, args.multiplier*len(files))]
     
     with _ProcessPool(8) as p:
-        p.starmap(generate_data, zip(repeat(args.epsilon), pseudo_patient_id))
+        p.starmap(generate_data, zip(repeat(args.epsilon), files, pseudo_patient_id))
 
 if __name__ == "__main__":
     main()

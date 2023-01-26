@@ -7,11 +7,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_dg_rcnf'
 file_name = config['file_name'][table_name]

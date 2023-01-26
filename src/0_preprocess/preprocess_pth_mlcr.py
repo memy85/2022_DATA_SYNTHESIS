@@ -7,11 +7,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_pth_mlcr'
 file_name = config['file_name'][table_name]
@@ -32,6 +32,7 @@ pth_mlcr = read_file(input_path, file_name)
 mlcr_required = pth_mlcr[columns.keys()]
 
 
+
 #%%
 mlcr_required = convert_dates(mlcr_required, config, table_name.upper())
 
@@ -48,7 +49,5 @@ mlcr_required = mlcr_required.set_index(['PT_SBST_NO','TIME'])
 mlcr_final = mlcr_required.add_prefix(prefix)
 
 #%%
-mlcr_final = remove_invalid_values(mlcr_final)
-
-#%%
 mlcr_final.to_pickle(output_path.joinpath(table_name + '.pkl'))
+# %%

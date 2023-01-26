@@ -7,12 +7,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-#%%
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_ex_diag'
 file_name = config['file_name'][table_name]
@@ -31,6 +30,8 @@ ex_diag = read_file(input_path, file_name)
 #%%
 ex_diag['CEXM_NM'] = ex_diag.CEXM_NM.str.strip()
 
+#%%
+ex_diag = ex_diag.query("CEXM_NM == 'CEA' ")
 
 #%%  read data
 ex_diag_required = ex_diag[columns.keys()].copy()
@@ -43,9 +44,14 @@ ex_diag_required['CEXM_RSLT_CONT'] = ex_diag_required.CEXM_RSLT_CONT.replace('.'
 
 ex_diag_required['CEXM_RSLT_CONT'] = ex_diag_required['CEXM_RSLT_CONT'].astype('float32')
 
+
 #%% convert dates
 ex_diag_required = convert_dates(ex_diag_required, config=config, table_name=table_name.upper())
 ex_diag_required = ex_diag_required.drop_duplicates()
+
+#%%
+ex_diag_required = ex_diag_required.groupby(['PT_SBST_NO','TIME','CEXM_NM'], as_index=False).mean()
+
 
 #%%
 ex_diag_required = ex_diag_required.rename(columns = {'CEXM_YMD':"TIME"})
@@ -61,5 +67,3 @@ pivoted_ex_diag = pivoted_ex_diag.add_prefix(prefix)
 
 #%%
 pivoted_ex_diag.to_pickle(output_path.joinpath('clrc_ex_diag.pkl'))
-
-#%%

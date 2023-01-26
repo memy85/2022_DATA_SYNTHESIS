@@ -7,11 +7,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_trtm_rd'
 file_name = config['file_name'][table_name]
@@ -27,33 +27,37 @@ output_path = output_path.joinpath('0_preprocess')
 
 #%%
 trtm_rd = read_file(input_path, file_name)
+
 #%%
 rd_required = trtm_rd[columns.keys()]
 #%%
 rd_required = convert_dates(rd_required, config, table_name.upper())
 
 
-
 # %%
-def expand_row(row):
-    dates = pd.date_range(row['RDT_STRT_YMD'], row['RDT_END_YMD'])
-    coppied = row.copy()
-    new_rows = []
-    for date in dates:
-        coppied = coppied.copy()
-        coppied['TIME'] = date
-        coppied['RDT'] = 1
-        new_rows.append(coppied)
-    return pd.DataFrame(new_rows)[['PT_SBST_NO','TIME','RDT']]
+# def expand_row(row):
+#     dates = pd.date_range(row['RDT_STRT_YMD'], row['RDT_END_YMD'])
+#     coppied = row.copy()
+#     new_rows = []
+#     for date in dates:
+#         coppied = coppied.copy()
+#         coppied['TIME'] = date
+#         coppied['RDT'] = 1
+#         new_rows.append(coppied)
+#     return pd.DataFrame(new_rows)[['PT_SBST_NO','TIME','RDT']]
 
 
-# %%
-expanded = []
-for _, row in rd_required.iterrows():
-    expanded.append(expand_row(row))
+# # %%
+# expanded = []
+# for _, row in rd_required.iterrows():
+#     expanded.append(expand_row(row))
 
-# %%
-rd_final = pd.concat(expanded)
+#%%
+rd_final = rd_required[['PT_SBST_NO','RDT_STRT_YMD']].copy()
+
+rd_final = rd_final.rename(columns={'RDT_STRT_YMD':'TIME'})
+
+rd_final['RDT_STRT_YMD'] = 1
 
 #%%
 rd_final = rd_final.drop_duplicates().reset_index(drop=True)

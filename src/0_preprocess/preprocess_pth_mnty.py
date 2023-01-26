@@ -6,11 +6,11 @@ from pathlib import Path
 import numpy as np
 import os, sys
 
-with open('config.yaml')  as f:
-    config = yaml.load(f, yaml.SafeLoader)
-os.sys.path.append(config['path_config']['project_path'])
+project_path = Path(__file__).parents[2]
+os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+config = load_config()
 
 table_name = 'clrc_pth_mnty'
 file_name = config['file_name'][table_name]
@@ -46,8 +46,5 @@ mnty_final = mnty_required.set_index(['PT_SBST_NO','TIME'])
 mnty_final = mnty_final.add_prefix(prefix)
 
 #%%
-
-mnty_final = remove_invalid_values(mnty_final)
-
-#%%
 mnty_final.to_pickle(output_path.joinpath(table_name + '.pkl'))
+# %%
