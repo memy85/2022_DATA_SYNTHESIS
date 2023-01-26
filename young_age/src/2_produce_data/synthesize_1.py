@@ -82,6 +82,7 @@ train_bayesian_network(df_path, 800, 2, cats, candidate_keys, 10000, num_tuples_
 import pandas as pd
 import matplotlib.pyplot as plt
 df = pd.read_csv(output_path.joinpath("S0_mult_encoded_10000_degree2.csv"))
+##
 
 ##
 # df.OVR_SURV.hist()
