@@ -1,7 +1,29 @@
 '''
 베이지안 네트워크 돌린 후 복원하는 코드
 '''
+#%%
+import os, sys
+from pathlib import Path
+
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+print(f"this is project_path : {project_path.as_posix()}")
+os.sys.path.append(project_path.as_posix())
+
+from src.MyModule.utils import *
+#%%
+
+config = load_config()
+project_path = Path(config["project_path"])
+input_path = get_path("data/processed/preprocess_1")
+output_path = get_path("data/processed/preprocess_1")
+if not output_path.exists() : 
+    output_path.mkdir(parents=True)
+#%%
+
 import datetime
+import pandas as pd
+import pickle
 
 def decode(whole_encoded_df, tables, data):
     
@@ -36,10 +58,9 @@ def decode(whole_encoded_df, tables, data):
 
 #%%
 
-
 epsilons = [10000]
 for epsilon in epsilons:
-    syn = pd.read_csv(f'/home/dogu86/young_age_colon_cancer/final_data/synthetic/S0_mult_encoded_{epsilon}_degree2.csv')
+    syn = pd.read_csv(output_path.joinpath(f'synthetic/S0_mult_encoded_{epsilon}_degree2.csv'))
     try:
         syn = syn.drop('Unnamed: 0', axis=1)
     except:
@@ -100,8 +121,12 @@ for epsilon in epsilons:
     ml_data = ml_data.replace(999,np.NaN)
     ml_data = ml_data.replace('999',np.NaN)
 
-    ml_data.to_csv(f'/home/dogu86/young_age_colon_cancer/final_data/synthetic_decoded/Synthetic_data_epsilon{epsilon}.csv')
-    
+    if not output_path.joinpath(f'synthetic_decoded').exists():
+        output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
+                
+    ml_data.to_csv(output_path.joinpath(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}.csv')))
+
+
     ####################################################################################################################################
     
     # date time restore with randomly
@@ -157,7 +182,7 @@ for epsilon in epsilons:
     syn = syn.replace(999,np.NaN)
     #syn = syn.replace(0,'No Data')
 
-    pkl_encode =pd.read_pickle('LabelEncoder.pkl')
+    pkl_encode =pd.read_pickle(input_path.joinpath('LabelEncoder.pkl'))
 
     for key in pkl_encode.keys():
         inverse = {}
@@ -168,6 +193,10 @@ for epsilon in epsilons:
         except:
             pass
 
+    save_path = output_path.joinpath("synthetic_restore")
+    if not save_path.exists():
+        save_path.mkdir(parents=True)
 
-    syn.to_csv(f'/home/dogu86/young_age_colon_cancer/final_data/synthetic_restore/Synthetic_data_epsilon{epsilon}.csv',encoding='cp949')
+    syn.to_csv(save_path.joinpath(Synthetic_data_epsilon{epsilon}.csv'),encoding='cp949')
+                                  
 #%%

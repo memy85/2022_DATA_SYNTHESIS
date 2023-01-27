@@ -6,3 +6,7 @@ young_age/data
 *.zip
 *.gz
 *.tar.gz
+*.jukit
+
+# config files
+*.yaml
