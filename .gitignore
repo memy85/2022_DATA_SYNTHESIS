@@ -1,3 +1,8 @@
 data
 log
 young_age/data
+
+# package files
+*.zip
+*.gz
+*.tar.gz
