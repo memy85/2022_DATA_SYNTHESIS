@@ -3,13 +3,16 @@
 from pathlib import Path
 import os, sys
 
-project_path = Path(__file__).absolute().parents[2]
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
 #%%
 
 config = load_config()
+project_path = Path(config["project_path"])
 input_path = get_path("data/raw")
 output_path = get_path("data/processed/preprocess_1")
 if not output_path.exists() : 
@@ -21,6 +24,7 @@ import random
 import pickle
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
+
 
 #%%
 def decode(whole_encoded_df, tables, data):
@@ -79,7 +83,7 @@ data = data.replace('x',999)
 data = data.replace('Not Data', np.NaN)
 
 #%% 
-# exclude creiteria
+# exclude criteria
 # overall observation day is under 30days
 
 data = data[(data.CENTER_LAST_VST_YMD - data.BSPT_FRST_DIAG_YMD).dt.days >= 30]
@@ -218,7 +222,6 @@ for df in results[1:]:
     whole_encoded_df = pd.concat([whole_encoded_df, df],axis=1)
 
 #%%
-#%%
 whole_encoded_df = whole_encoded_df + 'r'
 
 #%%
@@ -226,12 +229,14 @@ whole_encoded_df = whole_encoded_df + 'r'
 pd.concat([standalone, whole_encoded_df],axis=1).to_csv(output_path.joinpath('encoded_D0.csv'),index_label=False)
 
 #%%
+# unmodified : Now we make the D0 that is not equal to 
+# For the columns in uD0, we change the variables into strings
+
 unmodified_D0 = pd.concat([standalone,bind],axis=1)
 encoders = []
 for col in unmodified_D0.columns:
     try:
         unmodified_D0[col].astype(float)
-        #encoders.append('non')
     except:
         unmodified_D0[col].astype(str)
         encoder = LabelEncoder()
@@ -239,11 +244,16 @@ for col in unmodified_D0.columns:
         encoders.append(encoder)
         trans = encoder.transform(unmodified_D0[col])
         unmodified_D0[col] = trans
-       
-encoded = pd.read_csv(output_path.joinpath('encoded_D0.csv'))
-sampled = encoded.sample(int(len(encoded) * 0.8))
-valid = unmodified_D0.drop(sampled.index)
 
+
+#%% split train and valid      
+encoded = pd.read_csv(output_path.joinpath('encoded_D0.csv'))
+sampled = encoded.sample(frac= 0.8)
+train_idx = sampled.index
+valid = encoded.loc[~encoded.index.isin(train_idx)]
+
+
+#%%
 valid["RLPS_DIFF"] = (data["RLPS_DIAG_YMD"] - data["BSPT_FRST_DIAG_YMD"]).dt.days
 valid["BSPT_IDGN_AGE"]  = data["BSPT_IDGN_AGE"]
 valid["DEAD_DIFF"] = (data["BSPT_DEAD_YMD"] - data["BSPT_FRST_DIAG_YMD"]).dt.days
@@ -258,6 +268,7 @@ for i in range(1,9):
     start_diff = (start-data["BSPT_FRST_DIAG_YMD"]).dt.days
     valid[f"REGN_TIME_DIFF_{i}"] = monthly_diff
     valid[f"REGN_START_DIFF_{i}"] = start_diff
+
 #%% 
 sampled.to_csv(output_path.joinpath('encoded_D0_to_syn.csv'), index=False)
 valid.to_csv(output_path.joinpath('encoded_D0_to_valid.csv'), index=False)
@@ -265,4 +276,18 @@ valid.to_csv(output_path.joinpath('encoded_D0_to_valid.csv'), index=False)
 
 with open(output_path.joinpath('LabelEncoder.pkl'), 'wb') as f:
     pickle.dump(encode_dict, f)
+#%%
+import pandas as pd
+train = pd.read_csv(output_path.joinpath("encoded_D0_to_syn.csv"))
+#%%
+# %%matplotlib inline
+import matplotlib.pyplot as plt
 
+#%%
+
+train.DEAD.hist()
+plt.show()
+#%%
+train.DEAD.value_counts()
+
+#%%
