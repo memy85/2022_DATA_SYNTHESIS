@@ -10,7 +10,7 @@ from src.MyModule.utils import *
 
 config = load_config()
 project_path = Path(config["project_path"])
-input_path = get_path('data/processed/2_produce_data')
+input_path = get_path('data/processed/2_produce_data/synthetic_decoded')
 output_path = get_path('data/processed/3_evaluate_data')
 if not output_path.exists():
     output_path.mkdir(parents=True)
@@ -77,11 +77,6 @@ for i, model in enumerate(models):
     real_scores.append(real_score)
     print(f'Done {i+1} / {len(models)}')
     
-
-
-
-
-
 test = pd.concat([real[real['DEAD']==1].sample(30),real[real['DEAD']==0].sample(270)])
 
 
@@ -106,17 +101,14 @@ roc = roc_auc_score(test['DEAD'],pred)
 data = pd.read_csv('/home/dogu86/young_age_colon_cancer/final_src/modified_syn_0.csv')
 data
 
-# |%%--%%| <p4MVzd7H82|CxboVqrUUF>
 
 times5 = real
 for _ in range(4):
     times5 = pd.concat([times5,real.copy()])
 
-# |%%--%%| <CxboVqrUUF|pVBaNMo7WI>
 
 times5
 
-# |%%--%%| <pVBaNMo7WI|rtiOLIMm7x>
 
 data = pd.read_csv('/home/dogu86/young_age_colon_cancer/final_data/synthetic_decoded/Synthetic_data_epsilon8000.csv', encoding = 'cp949')
 data = data.rename(columns={'DEAD_NFRM_DEAD':'DEAD'})
