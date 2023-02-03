@@ -11,7 +11,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_val_
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
-from utils import *
+from src.MyModule.utils import *
 
 def ml_train(data, model, epsilon, save = False, over_sampling = False , importance = False):
     
@@ -31,8 +31,6 @@ def ml_train(data, model, epsilon, save = False, over_sampling = False , importa
     
     #x_test = scale(x_test)
     #x_train = scale(x_train)
-    
-    
     
     dists = {
         'max_depth' : [3,5,10,15,20,30], # search space
@@ -129,6 +127,7 @@ def plot_graph(pred_real_to_real, syn_to_real, name, bar=True):
     nrow = 6 # 행의 갯수
     w = 0.25
     idx = np.arange(nrow)
+    
     plt.figure(figsize=(17,8))
     plt.bar([-1.1],[pred_real_to_real[0]], width=w, color = 'yellowgreen', label = 'F1 Score, real')
     plt.bar([-1.1+w],[pred_real_to_real[2]], width=w, color = 'seagreen', label = 'AUC Score, real')
@@ -149,12 +148,13 @@ def plot_graph(pred_real_to_real, syn_to_real, name, bar=True):
     plt.title(name + ' TSTR Results - Colon Cancer')   
     
     
-def output(real, syn_data,model, bar=True):
-    target = 'DEAD'
+def output(real, syn_data, model, bar=True, target="DEAD"):
 
     name = str(model).split('C')[0]
+
     if '()' in name:
         name= name[:-2]
+
     syn_to_real = []
     syn_to_syn = []
 
