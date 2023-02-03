@@ -60,6 +60,7 @@ def main():
     data = data.drop(data[cond1&cond2].index)
 
     data = data.drop(['OVRL_SRVL_DTRN_DCNT','RLPS_DTRN_DCNT'],axis=1)
+    data.to_pickle(output_path.joinpath(f"original_{args.age}.pkl"))
 
     # whole data length : 1501 -> after apply exclude criteria : 1253
     # %%
@@ -145,7 +146,6 @@ def main():
     tables= []
     for col in bind.columns:
         tables.append('_'.join(col.split('_')[0:1]))
-        
 
     result1 = dict.fromkeys(tables)
     uniq_tables = list(result1)
@@ -222,6 +222,7 @@ def main():
 
     # save unmodified
     unmodified_D0.to_pickle(output_path.joinpath(f"unmodified_D0_{args.age}.pkl"))
+
     #%% split train and valid      
 
     encoded = pd.read_csv(output_path.joinpath(f'encoded_D0_{args.age}.csv'))
@@ -231,32 +232,9 @@ def main():
     with open(output_path.joinpath("train_idx.pkl"), 'wb') as f:
         pickle.dump(train_idx, f)
 
-    valid = unmodified_D0.loc[~encoded.index.isin(train_idx)]
-
-    #%%
-    valid["RLPS DIFF"] = (data["RLPS_DIAG_YMD"] - data["BSPT_FRST_DIAG_YMD"]).dt.days
-    valid["BSPT_IDGN_AGE"]  = data["BSPT_IDGN_AGE"]
-    valid["DEAD_DIFF"] = (data["BSPT_DEAD_YMD"] - data["BSPT_FRST_DIAG_YMD"]).dt.days
-    valid["OVR_SURV"] = (data["CENTER_LAST_VST_YMD"]- data["BSPT_FRST_DIAG_YMD"]).dt.days
-    # valid["OPRT_SURV"] = (data["CENTER_LAST_VST_YMD"]- data["BSPT_FRST_DIAG_YMD"]).dt.days
-
-    for i in range(1,9):
-        start = pd.to_datetime(data[f'TRTM_CASB_STRT_YMD{i}'], format = "%Y%m%d")
-        end = pd.to_datetime(data[f'TRTM_CASB_CSTR_YMD2_{i}'], format = "%Y%m%d")
-
-        monthly_diff = (end-start).dt.days
-        start_diff = (start-data["BSPT_FRST_DIAG_YMD"]).dt.days
-        valid[f"REGN_TIME_DIFF_{i}"] = monthly_diff
-        valid[f"REGN_START_DIFF_{i}"] = start_diff
-
     #%% 
   
     sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{args.age}.csv'), index=False)
-    valid.to_csv(output_path.joinpath(f'encoded_D0_to_valid_{args.age}.csv'), index=False)
-
-
-
-
 
 #%%
 if __name__ == "__main__" : 
@@ -288,6 +266,4 @@ if __name__ == "__main__" :
 ##%%
 
 #df = pd.read_csv(output_path.joinpath("encoded_D0_to_syn_50.csv"))
-
-
 
