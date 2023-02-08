@@ -35,7 +35,7 @@ def train_bayesian_network(input_data,
     """
     This functions trains the network and saves the network with the given epsilon
     """
-
+    print("starting describing the data..." )
     describer = DataDescriber(category_threshold=threshold)
     describer.describe_dataset_in_correlated_attribute_mode(dataset_file=input_data,
                                                             epsilon=epsilon_value,
@@ -48,6 +48,7 @@ def train_bayesian_network(input_data,
 
     describer.save_dataset_description_to_file(description_file)    
 
+    print("starting generating the data..." )
     generator = DataGenerator()
     generator.generate_dataset_in_correlated_attribute_mode(num_generate, description_file)
     generator.save_synthetic_data(synthetic_data_path)
@@ -67,7 +68,7 @@ def main():
     ## settings for bayesian network
 
     threshold_value = 800
-    epsilon_value = 10000
+    # epsilon_value = 10000
     degree_of_bayesian_network = 2
     df_path = input_path.joinpath(f"encoded_D0_to_syn_{args.age}.csv").as_posix()
     df = pd.read_csv(df_path)
@@ -75,23 +76,24 @@ def main():
     columns_list = df.columns
     cats = {cat : True for cat in columns_list} # treat all the columns as categorical data
     candidate_keys = {'PT_SBST_NO': True}
-    num_tuples_to_generate = len(df)*5
+    num_tuples_to_generate = len(df) * config['multiply']
 
     # for epsilons create describers
 
-    train_bayesian_network(df_path, 800, 2, cats, candidate_keys, epsilon_value, num_tuples_to_generate, args)
+    # train_bayesian_network(df_path, 800, 2, cats, candidate_keys, epsilon_value, num_tuples_to_generate, args)
 
     ## If you wish to do for epsilons untoggle below
 
-    # epsilons = [0,0.1,1,10,100,1000,10000]
-    # for epsilon in epsilons:
-    #     train_bayesian_network(input_data=df,
-    #                            threshold=threshold_value,
-    #                            degree_of_bn=degree_of_bayesian_network,
-    #                            categoricals=cats,
-    #                            candidates=candidate_keys,
-    #                            epsilon_value=epsilon,
-    #                            num_generate=num_tuples_to_generate)
+    epsilons = config['epsilon'] 
+    for epsilon in epsilons:
+        train_bayesian_network(input_data=df_path,
+                               threshold=threshold_value,
+                               degree_of_bn=degree_of_bayesian_network,
+                               categoricals=cats,
+                               candidates=candidate_keys,
+                               epsilon_value=epsilon,
+                               num_generate=num_tuples_to_generate,
+                               args = args)
 #%%
 if __name__ == "__main__" : 
     main()
@@ -106,4 +108,7 @@ if __name__ == "__main__" :
 # df.OVR_SURV.hist()
 # plt.show()
 
+#%%
 
+config['epsilon'][0]
+config['multiply'] * 10

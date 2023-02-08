@@ -72,14 +72,10 @@ def main():
     train_idx = pd.read_pickle(input_path.joinpath(f"train_idx_{age}.pkl"))
 
     #%%
-
     encoded = pd.read_csv(output_path.joinpath(f'encoded_D0_{age}.csv'))
-
-
     #%%
     train = unmodified_D0.loc[encoded.index.isin(train_idx)].copy()
     test = unmodified_D0.loc[~encoded.index.isin(train_idx)].copy()
-
 
     train = restore_to_learnable(train, original)
     test = restore_to_learnable(test, original)
