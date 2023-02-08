@@ -19,11 +19,11 @@ input_path = get_path("data/processed/2_produce_data/synthetic_decoded")
 
 synthetic_path = input_path.joinpath(f"Synthetic_data_epsilon10000_{age}.csv")
 
-real_path = get_path(f"data/processed/preprocess_1/encoded_D0_to_syn_{age}.csv")
+synthetic_data_path_list = [input_path.joinpath(f"Synthetic_data_epsilon{number}_{age}.csv") for number in [0.1, 1, 10, 100, 1000, 10000]]
 
-testset_path = get_path(f"data/processed/preprocess_1/encoded_D0_to_valid_{age}.csv")
+train_ori_path = get_path(f"data/processed/preprocess_1/train_ori_{age}.pkl")
 
-whole_path = get_path(f"data/processed/preprocess_1/encoded_D0_{age}.csv")
+testset_path = get_path(f"data/processed/preprocess_1/test_{age}.pkl")
 
 output_path = get_path("data/processed/3_evaluate_data/")
 
@@ -47,53 +47,20 @@ from src.MyModule.distribution_comparison import *
 #%%
 
 synthetic = pd.read_csv(synthetic_path)
-real = pd.read_csv(real_path)
-testset = pd.read_csv(testset_path)
-whole = pd.read_csv(whole_path)
+# synthetic_data_list = list(map(lambda x : pd.read_csv(x), synthetic_data_path_list))
+
+train_ori = pd.read_pickle(train_ori_path)
+test = pd.read_pickle(testset_path)
 
 #%%
-whole
 
-#%%
-
-testset.drop(["PT_SBST_NO"], axis=1, inplace=True)
-real.drop(["PT_SBST_NO"], axis=1, inplace=True)
+test.drop(["PT_SBST_NO"], axis=1, inplace=True)
+train_ori.drop(["PT_SBST_NO"], axis=1, inplace=True)
 synthetic.drop(["PT_SBST_NO", "Unnamed: 0"], axis=1, inplace=True)
 
-
-#%% make testset and real, synthetic the same format
-
-label_encoder_path = get_path(f"data/processed/preprocess_1/LabelEncoder_{age}.pkl")
-label_encoder = pd.read_pickle(label_encoder_path)
-
 #%%
-label_encoder
-
-#%%
-for encoder in label_encoder:
-    real
-
-#%%
-train_idx = real.index
-
-real["RLPS DIFF"] = (whole["RLPS_DIAG_YMD"] - whole["BSPT_FRST_DIAG_YMD"]).dt.days
-
-#%%
-valid["BSPT_IDGN_AGE"]  = data["BSPT_IDGN_AGE"]
-valid["DEAD_DIFF"] = (data["BSPT_DEAD_YMD"] - data["BSPT_FRST_DIAG_YMD"]).dt.days
-valid["OVR_SURV"] = (data["CENTER_LAST_VST_YMD"]- data["BSPT_FRST_DIAG_YMD"]).dt.days
-# valid["OPRT_SURV"] = (data["CENTER_LAST_VST_YMD"]- data["BSPT_FRST_DIAG_YMD"]).dt.days
-
-for i in range(1,9):
-    start = pd.to_datetime(data[f'TRTM_CASB_STRT_YMD{i}'], format = "%Y%m%d")
-    end = pd.to_datetime(data[f'TRTM_CASB_CSTR_YMD2_{i}'], format = "%Y%m%d")
-
-    monthly_diff = (end-start).dt.days
-    start_diff = (start-data["BSPT_FRST_DIAG_YMD"]).dt.days
-    valid[f"REGN_TIME_DIFF_{i}"] = monthly_diff
-    valid[f"REGN_START_DIFF_{i}"] = start_diff
-
-
+train_ori
+# here I should do from here
 
 #%%
 # real = valid.copy()

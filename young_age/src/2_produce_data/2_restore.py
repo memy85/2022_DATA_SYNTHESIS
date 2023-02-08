@@ -9,8 +9,9 @@ import random
 import argparse
 from sklearn.preprocessing import LabelEncoder
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path().cwd()
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path().cwd()
+
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -24,6 +25,7 @@ preprocess_1_path = get_path("data/processed/preprocess_1")
 output_path = get_path("data/processed/2_produce_data")
 if not output_path.exists() : 
     output_path.mkdir(parents=True)
+
 #%%
 
 import datetime
@@ -77,7 +79,6 @@ def restore_day(data, target, multiplier):
             restore_days = np.NaN
         days_arr.append(restored_days)
 
-
     data[target] = days_arr
     return data
 
@@ -106,7 +107,7 @@ def main():
             tables.append('_'.join(col.split('_')[0:1]))
 
     #%%
-    epsilons = [10000]
+    epsilons = config['epsilon']
     for epsilon in epsilons:
         syn = pd.read_csv(output_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
         try:

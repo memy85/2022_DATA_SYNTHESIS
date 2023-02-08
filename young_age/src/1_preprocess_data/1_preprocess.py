@@ -26,15 +26,12 @@ import pickle
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
-
-
 #%%
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--age", type = int, default = 50)
     args = parser.parse_args()
     return args
-
 
 #%%
 def main():
