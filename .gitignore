@@ -11,3 +11,6 @@ young_age/data
 
 # config files
 *.yaml
+
+# research notes
+research_notes.txt
