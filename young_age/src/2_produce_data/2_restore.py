@@ -109,7 +109,7 @@ def main():
     #%%
     epsilons = config['epsilon']
     for epsilon in epsilons:
-        syn = pd.read_csv(output_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
         try:
             syn = syn.drop('Unnamed: 0', axis=1)
         except:
@@ -253,3 +253,8 @@ def main():
 
 if __name__ == "__main__" : 
     main()
+
+
+
+
+
