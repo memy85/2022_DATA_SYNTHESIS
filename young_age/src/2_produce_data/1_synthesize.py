@@ -10,8 +10,8 @@ from DataSynthesizer.lib.utils import read_json_file, display_bayesian_network
 import os,sys
 from pathlib import Path
 
-folder_path = Path().cwd().absolute().as_posix()
-sys.path.append(folder_path)
+project_path = Path(__file__).absolute().parents[2]
+sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
 
