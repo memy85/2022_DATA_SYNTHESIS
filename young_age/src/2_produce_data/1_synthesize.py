@@ -67,9 +67,9 @@ def main():
     args = argument_parse()
     ## settings for bayesian network
 
-    threshold_value = 800
+    threshold_value = 200
     # epsilon_value = 10000
-    degree_of_bayesian_network = 2
+    degree_of_bayesian_network = 4 # the maximum number of parents
     df_path = input_path.joinpath(f"encoded_D0_to_syn_{args.age}.csv").as_posix()
     df = pd.read_csv(df_path)
 
@@ -110,5 +110,9 @@ if __name__ == "__main__" :
 
 #%%
 
-config['epsilon'][0]
-config['multiply'] * 10
+
+df = pd.read_csv(input_path.joinpath("encoded_D0_to_syn_50.csv"))
+#%%
+
+df.DEAD.value_counts()
+
