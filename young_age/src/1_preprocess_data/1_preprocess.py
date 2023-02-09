@@ -226,7 +226,7 @@ def main():
     sampled = encoded.sample(frac= 0.8, random_state = 0)
     train_idx = sampled.index
 
-    with open(output_path.joinpath("train_idx.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"train_idx_{args.age}.pkl"), 'wb') as f:
         pickle.dump(train_idx, f)
 
     #%% 
