@@ -82,8 +82,8 @@ def main():
 
     #%%
 
-    train.to_pickle(output_path.joinpath("train_ori_{age}.pkl"))
-    test.to_pickle(output_path.joinpath("test_{age}.pkl"))
+    train.to_pickle(output_path.joinpath(f"train_ori_{age}.pkl"))
+    test.to_pickle(output_path.joinpath(f"test_{age}.pkl"))
 
     #%% 
 
