@@ -8,8 +8,8 @@ from pathlib import Path
 import os, sys
 import argparse
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -82,8 +82,8 @@ def main():
 
     #%%
 
-    train.to_pickle(output_path.joinpath("train_ori_{age}.pkl"))
-    test.to_pickle(output_path.joinpath("test_{age}.pkl"))
+    train.to_pickle(output_path.joinpath(f"train_ori_{age}.pkl"))
+    test.to_pickle(output_path.joinpath(f"test_{age}.pkl"))
 
     #%% 
 
