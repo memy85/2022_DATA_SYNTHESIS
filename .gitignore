@@ -8,7 +8,7 @@ young_age/data
 *.tar.gz
 *.jukit
 *.swp
-
+*.csv
 # config files
 *.yaml
 
