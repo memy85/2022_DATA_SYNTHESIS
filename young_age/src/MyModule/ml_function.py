@@ -2,35 +2,29 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_val_score
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from src.MyModule.utils import *
 
-def ml_train(data, model, epsilon, save = False, over_sampling = False , importance = False):
+def ml_train(x, y,  model, epsilon, save = False, over_sampling = False , importance = False):
     
     '''
     이 함수는 데이터와 모델을 받아서 훈련시키는 함수
     '''
 
-    data = data.astype(float)
-    
-    x = data.drop(['DEAD'], axis=1)
-    y = data['DEAD']
-    
-    
-    #x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.25,random_state=123)
+    x = x.astype(float)
+    y = y.astype(float)
     
     feature = x.columns
-    
-    #x_test = scale(x_test)
-    #x_train = scale(x_train)
     
     dists = {
         'max_depth' : [3,5,10,15,20,30], # search space
@@ -39,17 +33,6 @@ def ml_train(data, model, epsilon, save = False, over_sampling = False , importa
     
     from sklearn.model_selection import StratifiedKFold
     skf = StratifiedKFold(n_splits = 10, shuffle = True, random_state=123)
-    #models= model
-    
-    #model = model.fit(x_train,y_train)
-    
-    #pred = model.predict(x_test)
-    #f1 = cross_val_score(model, x, y, scoring='f1', cv=10)
-    #acc = cross_val_score(model, x, y, scoring='accuracy', cv=skf)
-    #roc = cross_val_score(model, x, y, scoring='roc_auc', cv=skf)
-    
-    #print("After OverSampling, counts of label '1': {}".format(sum(y_train==1)))
-    #print("After OverSampling, counts of label '0': {}".format(sum(y_train==0)))
         
     f1_arr = []
     acc_arr =[]
@@ -84,7 +67,6 @@ def ml_train(data, model, epsilon, save = False, over_sampling = False , importa
         proba = models.predict_proba(x_test)[:, 1]
         loss = cross_entropy(proba, y_test)
         
-        
         f1_arr.append(f1)
         acc_arr.append(acc)
         roc_arr.append(roc)
@@ -96,15 +78,6 @@ def ml_train(data, model, epsilon, save = False, over_sampling = False , importa
         with open('clf_model'+str(epsilon)+'.pkl','wb') as fw:
             pickle.dump(models, fw)
             
-#    f1 = f1_score(y_test,pred, average ='macro')
-#    acc = accuracy_score(y_test,pred)
-#    roc = roc_auc_score(y_test,pred)
-    
-    
-#    print("f1 score : ",f1)
-#    print("accuracy : ", acc)
-#    print("auc : ", roc)
-    
     
     if importance == True:
         import seaborn as sns
@@ -147,136 +120,147 @@ def plot_graph(pred_real_to_real, syn_to_real, name, bar=True):
     plt.xlabel = 'Epsilon'
     plt.title(name + ' TSTR Results - Colon Cancer')   
     
+def train_and_test(model_name, **kwargs):
+
+    '''
+    This function trains a model and outputs the true performance of the given machine learning model
+    model name : DecisionTree, RandomForest, XGBoost
+    kwargs : train_x, train_y, valid_x, valid_y, test_x, test_y and a model, also the model_path
+    output : (auroc, f1_score)
+
+    '''
+    train_x, train_y = kwargs['train_x'], kwargs['train_y']
+    valid_x, valid_y = kwargs['valid_x'], kwargs['valid_y']
+    test_x, test_y = kwargs['test_x'], kwargs['test_y']
+    model_path = kwargs['model_path']
+
+    best_model, scaler = get_best_model(model_name, train_x, train_y, valid_x, valid_y)
+    save_model(model_path, model_name, best_model)
+
+    if best_model == 0 :
+        assert False, "there the there is no model named {}".format(model_name)
+
+    testset = (test_x, test_y)
+    accuracy, auc, f1 = test_model(testset,best_model, scaler)
+    return accuracy, auc, f1
+
+def test_model(test_data, model, scaler):
+
+    x, y = test_data
+    # scaler = StandardScaler()
+    x = scaler.fit_transform(x)
+
+    pred = model.predict(x)
+    accuracy = accuracy_score(y, pred)
+    auc = roc_auc_score(y, pred)
+    f1 = f1_score(y, pred)
+
+    return accuracy, auc, f1
     
-def output(real, syn_data, model, bar=True, target="DEAD"):
-
-    name = str(model).split('C')[0]
-
-    if '()' in name:
-        name= name[:-2]
-
-    syn_to_real = []
-    syn_to_syn = []
-
-    real_test = real.sample(800)
-    real_valid = real.drop(real_test.index)
+def get_best_model(model_name, train_x, train_y, valid_x, valid_y):
     
-    real_valid_y = real_valid[target]
-    real_valid_y = real_valid_y.astype(int)
-    real_valid_x = real_valid.drop([target],axis=1)
+    train = (train_x, train_y)
+    valid = (valid_x, valid_y)
 
-    # encoding ordinal columns
-    #real_x = label_encoding(real_x, [['BSPT_SEX_CD']])
-    real_valid_x = scale(real_valid_x)
-
-    dt_real = ml_train(real ,model, epsilon =1)
-    dt_real_model = dt_real[0]
-    pred_real_to_real = dt_real[1]
-
-    for i, syn in enumerate(syn_data):
-        #dt_syn = ml_train(syn, model, epsilon=0)
-        dt_syn_model = get_best_model(syn, real_test)[0]
-        #dt_syn_model = dt_syn[0]
-        #syn_score = dt_syn[1]
-        # evaluate real value from modeled in synthesized
-
-        # real value
+    if model_name in ['DecisionTree','RandomForest']:
+        grid_parameters = {"max_depth": [2,4,5,7,9,10,50],
+                       "min_samples_split": [2,3,4]}
+        return tree_like(model_name,train,valid,grid_parameters)
         
-        # 115
-        pred_syn_to_real = dt_syn_model.predict(real_valid_x).astype(int)
+    elif model_name == 'XGBoost':
+        grid_parameters = {"max_depth": [4,5,7,10,50], 
+                           'learning_rate':[0.01, 0.1]}
+        return get_xgb(model_name,train,valid,grid_parameters)
         
-        tstr_score = [f1_score(real_valid_y,pred_syn_to_real, average = 'macro'),
-                      accuracy_score(real_valid_y,pred_syn_to_real),
-                      roc_auc_score(real_valid_y,pred_syn_to_real) ]
-        
-        #tstr_score = [cross_val_score(dt_syn_model,real_x,real_y,scoring='f1_macro',cv=5,n_jobs=-1).mean(),
-        #                cross_val_score(dt_syn_model,real_x,real_y,scoring='accuracy',cv=5,n_jobs=-1).mean(),
-        #                cross_val_score(dt_syn_model,real_x,real_y,scoring='roc_auc',cv=5,n_jobs=-1).mean()]
-        
-        print(i, tstr_score)
-        #tstr_score = dt_syn[1]
-        #f1, acc, rocs
-        #syn_to_syn.append(syn_score)
-        syn_to_real.append(tstr_score)
-
-    plot_graph(pred_real_to_real, syn_to_real, name, bar)
-    return [syn_to_real, pred_real_to_real]
+    else:
+        print('model name error')
+        return 0
 
 
-def get_best_model(syn, real):
-    syn = syn.astype(float)
-    real = real.astype(float)
-    #real = pd.concat([real[real['DEAD']==1],real[real['DEAD']==0].sample(133)])
-    syn_x = syn.drop('DEAD',axis=1)
-    real_x = real.drop('DEAD',axis=1)
+#%%
+
+def save_model(path, model_name, model):
+    """
+    saves the model to the path
+    """
+    if not path.exists() :
+        path.mkdir(parents=True)
+
+    with open(path.joinpath("{}.pkl".format(model_name)), 'wb') as f:
+        pickle.dump(model, f)
+
+
+#%%
+
+def tree_like(model_name,train,valid,param):
     
-    syn_y = syn['DEAD']
-    real_y = real['DEAD']
-
-    syn_x = scale(syn_x)
-    real_x = scale(real_x)
+    (x, y), (valid_x, valid_y) = train, valid
+    cnt = 0
+    prev = 0
     
-    param = {
-    'max_depth':range(1, 21),
-    'max_leaf_nodes':range(5, 101, 5),
-    'criterion':['entropy','gini']
-    }
-    n_iter = 80
-
-    
-    grid_parameters = {"max_depth": [2,4,5,7,9,10,50,100],
-                       "min_samples_split": [2,3,4]
-                       }
+    scaler = StandardScaler()
+    x = scaler.fit_transform(x)
+    valid_x = scaler.fit_transform(valid_x)
     
     scores = []
     models = []
-    prev = 0
-    cnt = 0
-    for i in range(len(grid_parameters['max_depth'])):
-        for k in range(len(grid_parameters['min_samples_split'])):
-            model = RandomForestClassifier(max_depth = grid_parameters['max_depth'][i], min_samples_split=grid_parameters['min_samples_split'][k],n_jobs=-1)
-            model.fit(syn_x,syn_y)
-            pred = model.predict(real_x).astype(int)
-            f1 = f1_score(real_y,pred, average='macro')
-            acc = accuracy_score(real_y,pred)
-            roc = roc_auc_score(real_y,pred)
-            
-            
-            #tstr_score = [cross_val_score(model,real_x,real_y,scoring='f1_macro',cv=5,n_jobs=-1).mean(),
-            #    cross_val_score(model,real_x,real_y,scoring='accuracy',cv=5,n_jobs=-1).mean(),
-            #    cross_val_score(model,real_x,real_y,scoring='roc_auc',cv=5,n_jobs=-1).mean()]
-            
-            
-            if prev < (cross_val_score(model,real_x,real_y,scoring='f1_micro',cv=3,n_jobs=-1).mean()):
-                print(cross_val_score(model,real_x,real_y,scoring='f1_micro',cv=3,n_jobs=-1).mean())
-                best_model = model
-                cnt = 0
-            else:
-                prev = (cross_val_score(model,real_x,real_y,scoring='f1_micro',cv=3,n_jobs=-1).mean())
-                
-            cnt+=1
-            scores.append([f1,acc,roc])
-            models.append(model)
-            
-            if cnt >2:
-                print('break')
-                break
-                
-    '''    
-    model = RandomizedSearchCV(models,
-                    param_distributions=param,
-                    n_iter=n_iter, 
-                    cv=5, 
-                    n_jobs=-1,
-                    scoring='f1_macro')
-                    '''
-    best = []
-    for i in range(len(np.array(scores).transpose())):
-        best.append(max(np.array(scores).transpose()[i]))
-    sum_best = []
-    for i in range(len(scores)):
-        sum_best.append(sum(scores[i]))
-        
-    best_model = models[sum_best.index(max(sum_best))]
     
-    return [best_model, best]
+    for i in range(len(param['max_depth'])):
+        for k in range(len(param['min_samples_split'])):
+            if model_name == 'DecisionTree':
+                model = DecisionTreeClassifier(max_depth = param['max_depth'][i], 
+                                               min_samples_split=param['min_samples_split'][k],random_state=0)
+            elif model_name == 'RandomForest':
+                model = RandomForestClassifier(max_depth = param['max_depth'][i], 
+                                               min_samples_split=param['min_samples_split'][k],n_jobs=-1,
+                                               random_state=0)
+
+            model.fit(x,y)
+            
+            pred = model.predict(valid_x)
+            # cur_score = cross_val_score(model,valid_x,valid_y,scoring='f1_macro',cv=10,n_jobs=-1).mean()
+            cur_score = f1_score(valid_y, pred, average="macro")
+
+            
+            scores.append(cur_score)
+            models.append(model)
+    
+    best_idx = scores.index(max(scores))
+    
+    print(max(scores), models[best_idx])
+    
+    return models[best_idx], scaler
+
+def get_xgb(model_name,train,valid,param):
+    (x, y), (valid_x, valid_y) = train, valid
+    
+    cnt = 0
+    prev = 0
+    scores = []
+    models = []    
+        
+    scaler = StandardScaler()
+    x = scaler.fit_transform(x)
+    valid_x = scaler.fit_transform(valid_x)
+    evals = [(valid_x, valid_y)]
+    
+    for i in range(len(param['max_depth'])):
+        for k in range(len(param['learning_rate'])):
+            model = XGBClassifier(n_estimators=100, early_stoping_rounds=50,eval_set=evals,
+                learning_rate=param['learning_rate'][k], max_depth=param['max_depth'][i],objective='binary:logistic',n_jobs=-1, random_state=0)
+
+            model.fit(x, y, verbose=True, early_stopping_rounds=100, 
+                        eval_metric='logloss', eval_set=evals)
+
+            pred = model.predict(valid_x)
+            # cur_score = cross_val_score(model,valid_x,valid_y,scoring='f1_macro',cv=10,n_jobs=-1).mean()
+            cur_score = f1_score(valid_y, pred, average="macro")
+
+            scores.append(cur_score)
+            models.append(model)   
+                
+    best_idx = scores.index(max(scores))
+    
+    print(max(scores), models[best_idx])
+    
+    return models[best_idx], scaler

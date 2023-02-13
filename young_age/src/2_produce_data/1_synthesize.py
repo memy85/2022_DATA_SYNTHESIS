@@ -255,25 +255,24 @@ if __name__ == "__main__" :
 #    else :
 #        return columns
 
-
     
 
 #%%
 
-df = pd.read_csv(output_path.joinpath("S0_mult_encoded_10000_50.csv"))
+#df = pd.read_csv(output_path.joinpath("S0_mult_encoded_10000_50.csv"))
 
 
-#%%
+##%%
 
-bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_50.pkl"))
+#bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_50.pkl"))
 
 
-#%%
-bind_columns
+##%%
+#bind_columns
 
-#%%
+##%%
 
-df.columns
+#df.columns
 
 #%%
 
