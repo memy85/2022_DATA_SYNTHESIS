@@ -92,6 +92,7 @@ def argument_parse():
     args = parser.parse_args()
     return args
 
+
 def main():
     args = argument_parse()
 #%%
@@ -109,15 +110,17 @@ def main():
     #%%
     epsilons = config['epsilon']
     for epsilon in epsilons:
+
         syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+
         try:
             syn = syn.drop('Unnamed: 0', axis=1)
         except:
             pass
         syn = syn.astype(str)
+
         for col in syn.iloc[:,11:]:
             syn[col] =syn[col].str.replace('r','')
-            
             
         decoded = decode(syn.iloc[:,11:], tables, bind_columns)
         decoded.columns = bind_columns
