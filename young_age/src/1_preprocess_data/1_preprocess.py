@@ -26,12 +26,25 @@ import pickle
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
+from itertools import product
+
+
 #%%
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--age", type = int, default = 50)
     args = parser.parse_args()
     return args
+
+def create_cohort(data, cohort_criteria):
+    '''
+    data : original data
+    cohort criteria -> list : list of cohorts e.g. (combination info, cohort dataframe)
+    '''
+    
+    cohort_info = [(combi, cohort) for combi, cohort in data.groupby(cohort_criteria)]
+    return cohort_info     
+    
 
 #%%
 def main():
@@ -229,10 +242,48 @@ def main():
     with open(output_path.joinpath(f"train_idx_{args.age}.pkl"), 'wb') as f:
         pickle.dump(train_idx, f)
 
-    #%% 
+    #%% save with cohort information
   
     sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{args.age}.csv'), index=False)
 
+    cohort_info = create_cohort(sampled, config["cohort_criteria"]) 
+
+    
+    print("The total cohort combination size is {}".format(len(cohort_info)))
+
+    cohort_info_list = []
+    cohort_null_columns_dict = {}
+    for combination, cohort in cohort_info:
+
+        combination = "".join([str(element) for element in combination])
+        cohort_null_columns = check_null_column(cohort)
+
+        if cohort_null_columns != 0 :
+            cohort = cohort.drop(columns = cohort_null_columns)
+        else :
+            cohort_null_columns = []
+
+        cohort.to_csv(output_path.joinpath("cohort_{}_{}.csv".format(combination, args.age)), index=False)
+        cohort_info_list.append(combination)
+        cohort_null_columns_dict[combination] = cohort_null_columns
+
+    # save cohort info
+    with open(output_path.joinpath(f"coho_info_{args.age}.pkl"), 'wb') as f:
+        pickle.dump(cohort_info_list, f)
+
+    with open(output_path.joinpath(f"null_columns_dict_{args.age}.pkl"), 'wb') as f:
+        pickle.dump(cohort_null_columns_dict, f)
+
+def check_null_column(data):
+    """
+    return columns that are null
+    if non, returns 0. If exists returns list
+    """
+    columns = data.isnull().all()[data.isnull().all()].index.tolist()
+    if len(columns) < 1:
+        return 0
+    else :
+        return columns
 #%%
 if __name__ == "__main__" : 
     main()
@@ -262,5 +313,10 @@ if __name__ == "__main__" :
 
 ##%%
 
-#df = pd.read_csv(output_path.joinpath("encoded_D0_to_syn_50.csv"))
+# df = pd.read_csv(input_path.joinpath("encoded_D0_to_syn_50.csv"))
+
+
+#%%
+# sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{args.age}.csv'), index=False)
+
 
