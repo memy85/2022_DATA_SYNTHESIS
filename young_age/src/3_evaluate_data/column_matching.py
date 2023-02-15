@@ -3,9 +3,11 @@ from pathlib import Path
 import os
 import pickle
 
-cur_file = Path(os.getcwd())
+cur_file = Path(__file__).absolute()
+print(cur_file)
 working_dir = cur_file.parent
-parent_dir = working_dir.parent
+print('working directory {}'.format(working_dir))
+parent_dir = working_dir.parent.parent
 data_dir = parent_dir.joinpath('data')
 
 org_dir = data_dir.joinpath('processed/preprocess_1')
