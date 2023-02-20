@@ -41,7 +41,9 @@ train_ori_path = get_path(f"data/processed/preprocess_1/train_ori_{age}.pkl")
 
 testset_path = get_path(f"data/processed/preprocess_1/test_{age}.pkl")
 
-output_path = get_path("data/processed/3_evaluate_data/")
+output_path = get_path("data/processed/4_results/")
+
+figure_path = get_path("figures")
 
 if not output_path.exists():
     output_path.mkdir(parents=True)
@@ -91,14 +93,14 @@ def make_columns(data, drop_columns: list):
 
 
 #%% set all the outcome and needless variables
-################################################################# Machine Learning
-################################################################# Machine Learning
-################################################################# Machine Learning
+################################################################# machine learning
+################################################################# machine learning
+################################################################# machine learning
+
 from sklearn.model_selection import train_test_split
 
-
 outcome = "DEAD"
-drop_columns = [outcome, "DEAD_DIFF"] 
+drop_columns = [outcome, "DEAD_DIFF", "OVR_SURV"] 
 columns = make_columns(train_ori, drop_columns)
 
 ori_x = process_for_training(train_ori, outcome, columns)
@@ -111,7 +113,6 @@ syn_y_dict = {k : df[outcome] for k, df in synthetic_data_dict.items()}
 
 test_x = process_for_training(test, outcome, columns)
 test_y = test[outcome]
-
 
 # make train test here!
 
@@ -127,14 +128,9 @@ def check_if_the_columns_are_same(data1, data2):
     else :
         return False
 
-assert check_if_the_columns_are_same(syn_x_dict["eps_10000"], test_x), "The columns are not the same"
-
+assert check_if_the_columns_are_same(syn_x_dict["eps_10000"], test_x), "the columns are not the same"
 
 #%% define models
-# models = [DecisionTreeClassifier(),
-#           KNeighborsClassifier(),
-#           RandomForestClassifier(n_jobs=-1),
-#           XGBClassifier()]
 
 model_names = [
     "DecisionTree", "RandomForest", "XGBoost"
@@ -157,7 +153,8 @@ for i, model in enumerate(model_names):
                             valid_y = ori_valid_y ,
                             test_x = test_x,
                             test_y = test_y,
-                            model_path = model_path)
+                            model_path = model_path,
+                            scaler = None)
     result = {"model": model, "type":"original", "f1_score": f1, "auroc": auc, "accuracy": accuracy}
     scores.append(result)
 
@@ -175,7 +172,8 @@ for i, model in enumerate(model_names):
                                 valid_y = syn_valid_y,
                                 test_x = test_x,
                                 test_y = test_y,
-                                model_path = model_path)
+                                model_path = model_path,
+                                scaler =None)
 
         result = {"model": model_names[i], "type":key, "f1_score": f1, "auroc": auc, "accuracy": accuracy}
         scores.append(result)
@@ -183,11 +181,11 @@ for i, model in enumerate(model_names):
     print("ended evaluating for {}...".format(model_names[i]))
 print("finished calculating the outcomes...!")
 
+#%% New test code using the Cross Validation
 
 #%%
 scoreDF = pd.DataFrame(scores)
 scoreDF
-
 
 #%%
 scoreDF.to_csv(output_path.joinpath("fig1score.csv"), index=False)
@@ -201,11 +199,7 @@ scoreDF.to_csv(output_path.joinpath("fig1score.csv"), index=False)
 
 scoreDF = pd.read_csv(output_path.joinpath("fig1score.csv"))
 
-
-#%%
-
-scoreDF = scoreDF[["model","type","accuracy","auroc","f1_score"]]
-
+scoreDF = scoreDF[scoreDF.type != 'eps_0'][['model', 'type', 'auroc', 'f1_score']]
 
 #%% plot data
 import scienceplots
@@ -213,34 +207,55 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 plt.style.use(["science","ieee"])
-mpl.rcParams.update({"font.size": 8})
+mpl.rcParams.update({"font.size": 7})
+
+colors = ['#3182bd', "#9ecae1"]
+lnewdth = 0.7
+title_fontsize = 10.0
+
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize = (4,6), sharex=True)
+
+ticklabels = ["Original", "$\epsilon$ = 0.1", "$\epsilon$ = 1", "$\epsilon$ = 10", "$\epsilon$ = 100", "$\epsilon$ = 1000", "$\epsilon$ = \n 10000"]
+
+# decision tree
+tempdf = scoreDF[scoreDF.model == "DecisionTree"].copy()
+ori_auc = tempdf[tempdf.type == 'original']['auroc'].item()
+ori_f1 = tempdf[tempdf.type == 'original']['f1_score'].item()
+
+tempdf.set_index("type").plot.bar(ax = ax1, legend=False, color =colors)
+ax1.axhline(y = ori_auc, xmin = 0.04, linewidth = lnewdth, color = 'gray',linestyle = '--')
+ax1.axhline(y = ori_f1, xmin = 0.08, linewidth = lnewdth, color = 'gray',linestyle = '--')
+ax1.set_xticklabels([], rotation = 90)
+ax1.set_title('Decision Tree', fontsize= title_fontsize)
+
+# RandomForest
+tempdf = scoreDF[scoreDF.model == "RandomForest"].copy()
+ori_auc = tempdf[tempdf.type == 'original']['auroc'].item()
+ori_f1 = tempdf[tempdf.type == 'original']['f1_score'].item()
+
+tempdf.set_index("type").plot.bar(ax = ax2, legend = False, color = colors)
+ax2.set_xticklabels([], rotation = 90)
+ax2.axhline(y = ori_auc, xmin = 0.04, linewidth = lnewdth, color = 'gray',linestyle = '--')
+ax2.axhline(y = ori_f1, xmin = 0.08, linewidth = lnewdth, color = 'gray',linestyle = '--')
+ax2.set_title('RandomRorest', fontsize = title_fontsize)
+ax2.legend(handles = [], labels = ['AUROC', "F1 Score"], labelcolor = colors, loc = 'center right',
+           bbox_to_anchor = (1.1, 0.3, 0.2, 0.2))
+
+# XGboost
+tempdf = scoreDF[scoreDF.model == "XGBoost"].copy()
+ori_auc = tempdf[tempdf.type == 'original']['auroc'].item()
+ori_f1 = tempdf[tempdf.type == 'original']['f1_score'].item()
+
+tempdf.set_index("type").plot.bar(ax = ax3, legend = False, color = colors)
+ax3.set_xticklabels(ticklabels, rotation = 0)
+ax3.axhline(y = ori_auc, xmin = 0.04, linewidth = lnewdth, color = 'gray',linestyle = '--')
+ax3.axhline(y = ori_f1, xmin = 0.08, linewidth = lnewdth, color = 'gray',linestyle = '--')
+ax3.set_title('XGBoost', fontsize =title_fontsize)
+ax3.set_xlabel(" ")
+
+plt.tight_layout()
+plt.savefig(figure_path.joinpath("figure1.png"), dpi = 300)
+# plt.show()
+
 
 #%%
-fig, ax = plt.subplots(figsize=(8,6))
-
-models = scoreDF["model"].unique().tolist()
-ticklabels = ["Original", "$\epsilon$ \n 0", "$\epsilon$ \n 0.1", "$\epsilon$ \n 1", "$\epsilon$ \n 10", "$\epsilon$ \n 100", "$\epsilon$ \n 1000", "$\epsilon$ \n 10000"]
-
-rows = ["Model", "Accuracy", "AUROC", "F1 Score"]
-
-tempdf = scoreDF[scoreDF.model == "DecisionTree" ].copy()
-tempdf.set_index("type").plot.bar(ax = ax, legend=False, xticks = [])
-cell_text = [tempdf[cols].apply(lambda x : round(x,3)).tolist() for cols in ["accuracy", "auroc", "f1_score"]]
-
-ax.set(xlabel  = [])
-cell_text.insert(0, ticklabels)
-
-ax.table(cellText = cell_text,
-              rowLabels = rows, 
-              loc = "bottom",
-              )
-table.auto_set_font_size(False)
-table.auto_fontsize(8)
-
-# ax.set_xticks(ticks = [i for i in range(0, len(ticklabels))], labels = ticklabels, rotation= 90)
-# plt.tight_layout()
-plt.show()
-
-#%%
-
-tempdf
