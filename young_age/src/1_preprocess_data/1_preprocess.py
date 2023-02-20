@@ -4,8 +4,8 @@ from pathlib import Path
 import os, sys
 import argparse
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -36,14 +36,26 @@ def argument_parse():
     args = parser.parse_args()
     return args
 
+
 def create_cohort(data, cohort_criteria):
     '''
     data : original data
     cohort criteria -> list : list of cohorts e.g. (combination info, cohort dataframe)
     '''
+    data.loc[:, cohort_criteria] = data[cohort_criteria].astype('int64')
     
     cohort_info = [(combi, cohort) for combi, cohort in data.groupby(cohort_criteria)]
     return cohort_info     
+
+def remove_previous_cohorts(age) :
+    files = os.listdir(output_path.as_posix())
+    files = list(filter(lambda x : 'cohort' in x, files))
+    files = list(filter(lambda x : str(age) in x, files))
+
+    for file in files :
+        os.remove(output_path.joinpath(file).as_posix())
+
+    print("erased previous cohorts!")
     
 
 #%%
@@ -69,8 +81,8 @@ def main():
     cond2 = data['SGPT_PATL_T_STAG_VL'].isnull()==True
     data = data.drop(data[cond1&cond2].index)
 
-    data = data.drop(['OVRL_SRVL_DTRN_DCNT','RLPS_DTRN_DCNT'],axis=1)
     data.to_pickle(output_path.joinpath(f"original_{args.age}.pkl"))
+    data = data.drop(['OVRL_SRVL_DTRN_DCNT','RLPS_DTRN_DCNT'],axis=1)
 
     # whole data length : 1501 -> after apply exclude criteria : 1253
     # %%
@@ -95,8 +107,8 @@ def main():
     bind = bind.drop(['DEAD','5YR_DEAD','MLPT_ACPT_YMD','BPTH_ACPT_YMD'],axis=1)
     bind['OPRT_YMD'] = (((bind['OPRT_YMD'] - data['BSPT_FRST_DIAG_YMD']).dt.days)/15).round()
 
-    col = list(bind.iloc[:,:26].columns)
-    regn_col= list('REGN_' + bind.iloc[:,26:].columns)
+    col = list(bind.iloc[:,:27].columns)
+    regn_col= list('REGN_' + bind.iloc[:,27:].columns)
 
     col = col+regn_col
     bind.columns = col
@@ -205,7 +217,7 @@ def main():
     #%%
     whole_encoded_df = whole_encoded_df + 'r'
 
-    pd.concat([standalone, whole_encoded_df], axis=1).to_csv(output_path.joinpath(f"encoded_D0_{args.age}.csv"), index_label=False)
+    pd.concat([standalone, whole_encoded_df], axis=1).to_pickle(output_path.joinpath(f"encoded_D0_{args.age}.pkl"))
 
     #%%
     # unmodified : Now we make the D0 that is the same format as the input for bayesian
@@ -247,9 +259,10 @@ def main():
     sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{args.age}.csv'), index=False)
 
     cohort_info = create_cohort(sampled, config["cohort_criteria"]) 
-
     
     print("The total cohort combination size is {}".format(len(cohort_info)))
+
+    remove_previous_cohorts(args.age)
 
     cohort_info_list = []
     cohort_null_columns_dict = {}
@@ -313,7 +326,12 @@ if __name__ == "__main__" :
 
 ##%%
 
-# df = pd.read_csv(input_path.joinpath("encoded_D0_to_syn_50.csv"))
+#df = pd.read_csv(output_path.joinpath("encoded_D0_to_syn_50.csv"))
+
+##%%
+#df.BSPT_STAG_CLSF_CD.unique()
+
+#df.BSPT_STAG_VL.unique()
 
 
 #%%

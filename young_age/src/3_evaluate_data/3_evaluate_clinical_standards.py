@@ -38,8 +38,6 @@ if not output_path.exists():
 syn = pd.read_csv(synthetic_path, encoding = 'cp949')
 ori = pd.read_pickle(ori_path)
 
-#%%
-
 
 #%%
 
@@ -54,11 +52,11 @@ class Tester:
 
     def convert_dates(self, data, column) :
         try : 
-            data[column] = data[column].astype('datetime64[ns]')
+            data.loc[:, column] = data[column].astype('datetime64[ns]')
         except :
             try : 
-                data[column] = data[column].replace('0', np.nan)
-                data[column] = data[column].astype('datetime64[ns]')
+                data.loc[:, column] = data[column].replace('0', np.nan)
+                data.loc[:, column] = data[column].astype('datetime64[ns]')
             except :
                 print("check the values of the columns")
                 raise ValueError 
@@ -182,3 +180,95 @@ class Relapse(Tester):
         return df
 
 #%%
+
+class Death(Tester):
+
+    def __init__(self) :
+
+        super().__init__(test_criteria= "DEAD, DATES to death",
+                         information = "Death information")
+
+
+    def do_test(self, data, is_original=True) : 
+
+        df1 = self.test_stage_per_death(data)
+        df2 = self.test_stage_per_5_year_death(data, is_original=is_original)
+
+        return df1, df2
+
+    def test_stage_per_death(self, data) :
+        df = data[['BSPT_STAG_VL', 'DEAD']].copy()
+        df = df[df.DEAD == 1].copy()
+        df = df.groupby('BSPT_STAG_VL', as_index=False ).size()
+        
+        df.rename(columns = {'size' : 'counts'}, inplace=True)
+
+        df['ratio'] = df['counts'].apply(lambda x : x / df.shape[0])
+        return df
+
+    def get_5_year_death(self, data):
+        if data['DEAD_DIFF'] > (365 * 5) :
+            if data['DEAD'] == 1 :
+                return 0
+            else :
+                return data['DEAD']
+        else :
+            return data['DEAD']
+
+    def test_stage_per_5_year_death(self, data, is_original=True) :
+        if not is_original :
+
+            data['5YR_DEAD'] = data.apply(self.get_5_year_death, axis=1)
+
+        df = data[['BSPT_STAG_VL', '5YR_DEAD']].copy()
+        df = df[df['5YR_DEAD'] == 1].copy()
+        df = df.groupby('BSPT_STAG_VL', as_index=False ).size()
+        
+        df.rename(columns = {'size' : 'counts'}, inplace=True)
+
+        df['ratio'] = df['counts'].apply(lambda x : x / df.shape[0])
+        return df
+
+
+#%%
+
+class Surgery(Tester) :
+
+    def __init__(self) :
+        super().__init__(test_criteria= 'OPRT table', 
+                         information = 'stage per surgery information')
+
+    def do_test(self, data) :
+
+        pass
+
+    def test_stage_per_operation(self, data) :
+        data = data[data.OPRT_CURA_RSCT_NM == 'curative'].copy()
+        df = data[['BSPT_STAG_VL','OPRT_YMD']].dropna().groupby('BSPT_STAG_VL', as_index=False).size()
+        df = df.rename(columns = {'size' : 'counts'})
+        df['ratio'] = df['counts'].apply(lambda x : x / df.shape[0])
+        return df
+    
+    def test_stage_per_operation_purpose(self, data) :
+        df = data[['BSPT_STAG_VL', 'OPRT_CURA_RSCT_NM']].copy()
+        df = df[df.OPRT_CURA_RSCT_NM == 'curative']
+
+        df = df['BSPT_STAG_VL'].value_counts().sort_index().reset_index(name='count')
+        df['ratio'] = df['counts'].apply(lambda x : x / df.shape[0])
+        # df = df.rename(columns = {'index' : 'stage'})
+        # should be working on this part!
+        return df
+
+    def test_oprt_tn_counts_ratio(self, data) :
+        df = data[['OPRT_YMD', 'SGPT_PATL_T_STAG_VL', 'SGPT_PATL_N_STAG_VL']].dropna(subset= 'OPRT_YMD')
+        
+        df = df.drop(columns = "OPRT_YMD")
+        df.columns = ['T' , 'N']
+
+        df = df.isna().sum().reset_index(name='counts')
+        df.rename(columns = {'index' : 'stage'}, inplace=True)
+
+        df['ratio'] = df['counts'].apply(lambda x : x / df.shape[0])
+        return df
+    
+

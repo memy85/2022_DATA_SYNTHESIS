@@ -1,6 +1,5 @@
 #%%
 
-
 from pathlib import Path
 import os, sys
 
@@ -11,31 +10,18 @@ os.sys.path.append(project_path.as_posix())
 from src.MyModule.utils import *
 
 config = load_config()
-input_path = get_path("data/processed/2_produce_data/synthetic_decoded/")
+input_path = get_path("data/processed/3_evaluate_data")
 figure_path = get_path("figures/")
 ouput_path = get_path("data/processed/3_evaluate_data/")
+
 #%%
 import pandas as pd
 import numpy as np
+import argparse
 
-#%%
-original_path = get_path('data/raw/D0_Handmade_ver1.1.xlsx')
-synthetic_path = get_path('data/processed/2_produce_data/synthetic_restore/Synthetic_data_epsilon10000_50.csv')
-
-original = pd.read_excel(original_path) 
-synthetic = pd.read_csv(synthetic_path, encoding = 'cp949')
-
-#%% define variable
-
-columns1 = ["BSPT_SEX_CD", "BSPT_IDGN_AGE", "BSPT_FRST_DIAG_NM", "BSPT_STAG_CLSF_CD", "BSPT_STAG_VL",
-           "RLPS","RLPS_DTRN_DCNT","OVRL_SRVL_DTRN_DCNT", "DEAD"]
-columns2 = ["BSPT_SEX_CD", "BSPT_IDGN_AGE", "BSPT_FRST_DIAG_NM", "BSPT_STAG_CLSF_CD", "BSPT_STAG_VL",
-           "RLPS","RLPS_DIFF","OVR_SURV", "DEAD"]
-
-ori = original[columns1].copy()
-syn = synthetic[columns2].copy()
-
-syn = syn.rename(columns = {"RLPS_DIFF" : "RLPS_DTRN_DCNT", "OVR_SURV" : "OVRL_SRVL_DTRN_DCNT"})
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import scienceplots
 
 #%%
 
@@ -64,7 +50,6 @@ class CorrelationChecker:
             return pd.Series(codes)
         else :
             return column
-        
     
     def process4correlation(self):
         self.data1["origin"] = 'data1'
@@ -88,31 +73,105 @@ class CorrelationChecker:
          
 #%%
 
-processor = CorrelationChecker(ori, syn)        
+cols = [
+    "BSPT_IDGN_AGE",
+    "BSPT_SEX_CD",
+    "BSPT_FRST_DIAG_NM",
+    "SGPT_PATL_T_STAG_VL",
+    "SGPT_PATL_N_STAG_VL",
+    "SGPT_PATL_STAG_VL",
+    "BSPT_STAG_VL",
+    "MLPT_KRES_RSLT_NM",
+    "IMPT_HM1E_RSLT_NM",
+    "IMPT_HS2E_RSLT_NM",
+    "IMPT_HS6E_RSLT_NM",
+    "IMPT_HP2E_RSLT_NM",
+    "DEAD",
+    "OVRL_SURV",
+    "LNE_CHEMO",
+    "ADJ_CNT"
+]
+
+def load_pickle(path) :
+    df = pd.read_pickle(path) 
+    return df[cols].copy()
+
+def argument_parse():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--age', default = 50, type = int)
+    args = parser.parse_args()
+    return args
+#%%
+def main() : 
+    args = argument_parse()
+
+    original_path = get_path(f'data/processed/3_evaluate_data/matched_org_{args.age}.pkl')
+
+    synthetic_data_path_list = []
+    for epsilon in config['epsilon'] : 
+        synthetic_path = get_path(f'data/processed/3_evaluate_data/matched_syn_{epsilon}_{args.age}.pkl')
+        synthetic_data_path_list.append(synthetic_path)
+
+    original = pd.read_pickle(original_path) 
+    original = original[cols].copy()
+
+    synthetic_data_list = list(map(load_pickle, synthetic_data_path_list))
+
+    for idx, epsilon in enumerate(config['epsilon']) :
+
+        processor = CorrelationChecker(original, synthetic_data_list[idx]) 
+        plot_correlation(processor, epsilon, args.age)
+
+    
+            
 
 #%%
-diff = processor.calculate_correlation_diff()
+
+def plot_correlation(processor, epsilon, age) :
+    diff = processor.calculate_correlation_diff()
+
+    cols = list(processor.data1columns)
+    fig, ax = plt.subplots(figsize = (12,12))
+
+    # im = ax.imshow(diff, cmap='YlGn')
+    plt.pcolor(diff, cmap='YlGn', vmin = 0, vmax=0.8)
+    # cbar = ax.figure.colorbar(im, ax = ax, cmap='YlGn')
+    plt.colorbar( ax = ax )
+
+    plt.xticks(np.arange(diff.shape[1]), labels = cols, rotation=90)
+    plt.yticks(np.arange(diff.shape[1]), labels = cols)
+    plt.tick_params(axis = 'both', labelsize = 7)
+
+    plt.title("Correlation Difference, $\epsilon =$ {}".format(epsilon))
+    plt.savefig(figure_path.joinpath(f"correlation_{epsilon}_{age}.png"), dpi=300)
+    plt.show()
 
 #%%
-diff
+if __name__ == "__main__" :
 
+    main() 
+    
 #%%
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import scienceplots
 
-cols = list(processor.data1columns)
+#age = 50
 
-fig, ax = plt.subplots(figsize = (12,12))
+#original_path = get_path(f'data/processed/3_evaluate_data/matched_org_{age}.pkl')
 
-im = ax.imshow(diff, cmap='YlGn')
-cbar = ax.figure.colorbar(im, ax = ax, cmap='YlGn')
+#synthetic_data_path_list = []
+#for epsilon in config['epsilon'] : 
+#    synthetic_path = get_path(f'data/processed/3_evaluate_data/matched_syn_{epsilon}_{age}.pkl')
+#    synthetic_data_path_list.append(synthetic_path)
 
-ax.set_xticks(np.arange(diff.shape[1]), labels = cols, rotation=90)
-ax.set_yticks(np.arange(diff.shape[1]), labels = cols)
-ax.tick_params(axis = 'both', labelsize = 7)
+#original = pd.read_pickle(original_path) 
+#original = original[cols].copy()
 
-plt.title("Correlation Difference")
-plt.savefig(figure_path.joinpath("correlation.png"), dpi=300)
-plt.show()
+#synthetic_data_list = list(map(load_pickle, synthetic_data_path_list))
 
+#for idx, epsilon in enumerate(config['epsilon']) :
+#    if epsilon != 10000 :
+#        continue
+
+#    processor = CorrelationChecker(original, synthetic_data_list[idx]) 
+#    plot_correlation(processor, epsilon, age)
+##%%
+#pd.DataFrame(processor.calculate_correlation_diff()).values()

@@ -9,8 +9,8 @@ import random
 import argparse
 from sklearn.preprocessing import LabelEncoder
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path().cwd()
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path().cwd()
 
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
@@ -37,6 +37,7 @@ def decode(whole_encoded_df, tables, bind_data_columns):
     np_encoded = np.array(whole_encoded_df)
     np_encoded = np_encoded.astype(str)
     restored = pd.DataFrame()
+
     for k in range(len(np_encoded.transpose())):
         temp1 = []
         for i in np_encoded.transpose()[k]:
@@ -258,6 +259,62 @@ if __name__ == "__main__" :
     main()
 
 
+#%%
+
+
+#import os, sys
+#from pathlib import Path
+#import random
+#import argparse
+#from sklearn.preprocessing import LabelEncoder
+
+## project_path = Path(__file__).absolute().parents[2]
+#project_path = Path().cwd()
+
+#print(f"this is project_path : {project_path.as_posix()}")
+#os.sys.path.append(project_path.as_posix())
+
+#from src.MyModule.utils import *
+##%%
+
+#config = load_config()
+#project_path = Path(config["project_path"])
+#input_path = get_path("data/processed/2_produce_data")
+#preprocess_1_path = get_path("data/processed/preprocess_1")
+#output_path = get_path("data/processed/2_produce_data")
+#if not output_path.exists() : 
+#    output_path.mkdir(parents=True)
+
+##%%
+
+#import datetime
+#import pandas as pd
+#import pickle
 
 
 
+#age = 50
+##%% read bind colums
+#bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+
+##%%
+
+#bind_columns
+
+##%%
+#tables= []
+#for col in bind_columns:
+#        tables.append('_'.join(col.split('_')[0:1]))
+
+##%%
+#epsilons = config['epsilon']
+##%%
+#syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilons[1]}_{age}.csv'))
+##%%
+
+#ori_path = preprocess_1_path.joinpath("encoded_D0_to_syn_50.csv")
+#ori = pd.read_csv(ori_path)
+
+
+##%%
+#ori['SGPT'].apply(lambda x : x.replace('r'))

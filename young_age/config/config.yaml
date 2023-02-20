@@ -1,6 +1,7 @@
 
 project_path : /home/wonseok/projects/2022_DATA_SYNTHESIS/young_age
-cohort_criteria : [DEAD, RLPS]
-# epsilon : [0, 0.1, 1, 10, 100, 1000, 10000]
-epsilon : [10000]
+cohort_criteria : [DEAD, RLPS, BSPT_STAG_VL]
+epsilon : [0, 0.1, 1, 10, 100, 1000, 10000]
+# epsilon : [10000]
 multiply : 5
+age_cut : [30,35,40,45,50]
