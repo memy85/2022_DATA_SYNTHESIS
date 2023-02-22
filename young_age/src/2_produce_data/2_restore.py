@@ -98,6 +98,8 @@ def main():
     args = argument_parse()
 #%%
     raw_path = get_path("data/raw/D0_Handmade_ver1.1.xlsx")
+
+
     data = pd.read_excel(raw_path)
 
     #%% read bind colums
@@ -108,151 +110,153 @@ def main():
     for col in bind_columns:
             tables.append('_'.join(col.split('_')[0:1]))
 
-    #%%
-    epsilons = config['epsilon']
-    for epsilon in epsilons:
+    seeds = [i for i in range(0,config['randomseed'])]
+    for seed in seeds:
 
-        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+        seed_input_path = input_path.joinpath(f'seed{seed}')
+        seed_output_path = output_path.joinpath(f"seed{seed}")
 
-        try:
-            syn = syn.drop('Unnamed: 0', axis=1)
-        except:
-            pass
-        syn = syn.astype(str)
+        epsilons = config['epsilon']
+        for epsilon in epsilons:
 
-        for col in syn.iloc[:,11:]:
-            syn[col] =syn[col].str.replace('r','')
+            syn = pd.read_csv(seed_input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+
+            try:
+                syn = syn.drop('Unnamed: 0', axis=1)
+            except:
+                pass
+            syn = syn.astype(str)
+
+            for col in syn.iloc[:,11:]:
+                syn[col] =syn[col].str.replace('r','')
+                
+            decoded = decode(syn.iloc[:,11:], tables, bind_columns)
+            decoded.columns = bind_columns
             
-        decoded = decode(syn.iloc[:,11:], tables, bind_columns)
-        decoded.columns = bind_columns
-        
-        syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
-        syn = syn.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
-        
-        # continous restore    
-        syn['BSPT_IDGN_AGE'] = syn['BSPT_IDGN_AGE'].astype(int)
-        ages=[]
-        for age in syn['BSPT_IDGN_AGE']:
-            if age < 10:
-                restored_age = age * 5 + random.randrange(-2,3,1)
-            else:
-                restored_age = age * 5 + random.randrange(-2,0,1)
-            ages.append(restored_age)
+            syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
+            syn = syn.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
             
-        syn['BSPT_IDGN_AGE'] =  ages
-
-        days = ['OVR_SURV','RLPS_DIFF','DEAD_DIFF']
-        
-        for i in range(1,9):
-            days.append(f'REGN_TIME_DIFF_{i}')
-            days.append(f'REGN_START_DIFF_{i}')
-        
-        for col in days:
-            syn[col] = syn[col].astype(float)
-            num = 30
-            if col == 'OVR_SURV':
-                num = 90
-            elif col[:4] == 'REGN':
-                num = 15
-            syn = restore_day(syn, col, num)
-        
-        
-        for col in list(syn.columns)[11:]:
-            syn[col] = syn[col].astype(int)
-        
-        
-        # Label Encoding for ml
-        ml_data=syn.copy()
-        encoder = LabelEncoder() 
-        
-        ####### ML data #############################################################################################################################
-
-        for col in ['BSPT_SEX_CD', 'BSPT_FRST_DIAG_NM', 'BSPT_STAG_CLSF_CD']:
-            ml_data[col].astype(str)
-            encoder.fit(ml_data[col])
-            trans = encoder.transform(ml_data[col])
-            
-            ml_data[col] = trans
-        
-        ml_data = ml_data.replace(999,np.NaN)
-        ml_data = ml_data.replace('999',np.NaN)
-
-        if not output_path.joinpath(f'synthetic_decoded').exists():
-            output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
-                    
-        ml_data.to_csv(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
-
-        
-        # date time restore with randomly
-        start_date = min(data['BSPT_FRST_DIAG_YMD'])
-        end_date = max(data['BSPT_FRST_DIAG_YMD'])
-        
-        date_range = pd.date_range(start_date,end_date,freq='D')
-
-        date = []
-        for _ in range(len(syn)):
-            date.append(random.choice(date_range))
-        
-        syn.insert(4,'BSPT_FRST_DIAG_YMD', date)    
-
-        
-        for col in ['RLPS', 'DEAD']:
-            diff = []
-            for i in range(len(syn)):        
-                try:
-                    diff.append((syn['BSPT_FRST_DIAG_YMD'].iloc[i] + datetime.timedelta(days=syn[col+'_DIFF'].iloc[i])).strftime("%Y-%m-%d"))
-                except:
-                    diff.append(0)
-            syn.insert(list(syn.columns).index(col)+1 , col+'_YMD' , diff)
-
-        for i in range(1,9):
-            start_diff = []
-            end_diff = []
-            for j in range(len(syn)):        
-                if syn[f'REGN_START_DIFF_{i}'].iloc[j] != 0:
-                    start_day = (syn['BSPT_FRST_DIAG_YMD'].iloc[j] + datetime.timedelta(days=int(syn[f'REGN_START_DIFF_{i}'].iloc[j]))).strftime("%Y-%m-%d")
-                    end_day = datetime.datetime.strptime(start_day,"%Y-%m-%d") + datetime.timedelta(days=int(syn[f'REGN_TIME_DIFF_{i}'].iloc[j]))
-                    start_diff.append(start_day)
-                    end_diff.append(end_day.strftime("%Y-%m-%d"))
+            # continous restore    
+            syn['BSPT_IDGN_AGE'] = syn['BSPT_IDGN_AGE'].astype(int)
+            ages=[]
+            for age in syn['BSPT_IDGN_AGE']:
+                if age < 10:
+                    restored_age = age * 5 + random.randrange(-2,3,1)
                 else:
-                    start_diff.append(np.NaN)
-                    end_diff.append(np.NaN)
+                    restored_age = age * 5 + random.randrange(-2,0,1)
+                ages.append(restored_age)
+                
+            syn['BSPT_IDGN_AGE'] =  ages
 
-            syn[f'REGN_START_DIFF_{i}'] = start_diff
-
-            syn.insert(list(syn.columns).index(f'REGN_START_DIFF_{i}')+1 , f'REGN_END_DAY_{i}' , end_diff)    
-            syn = syn.rename({f'REGN_START_DIFF_{i}':f'REGN_START_DAY_{i}'})
-         
-        # read encoder, list-like
-        encoders = pd.read_pickle(preprocess_1_path.joinpath(f"LabelEncoder_{args.age}.pkl"))
+            days = ['OVR_SURV','RLPS_DIFF','DEAD_DIFF']
             
-        # numeric to context
-        for i in range(len(encoders)):
-            try:
-                syn[syn.columns[i+14]] = encoders[i].inverse_transform(syn[syn.columns[i+14]])
-            except:
-                pass
+            for i in range(1,9):
+                days.append(f'REGN_TIME_DIFF_{i}')
+                days.append(f'REGN_START_DIFF_{i}')
+            
+            for col in days:
+                syn[col] = syn[col].astype(float)
+                num = 30
+                if col == 'OVR_SURV':
+                    num = 90
+                elif col[:4] == 'REGN':
+                    num = 15
+                syn = restore_day(syn, col, num)
+            
+            for col in list(syn.columns)[11:]:
+                syn[col] = syn[col].astype(int)
+            
+            
+            # Label Encoding for ml
+            ml_data=syn.copy()
+            encoder = LabelEncoder() 
+            
+            ####### ML data #############################################################################################################################
 
-        syn = syn.rename({'REGN_IMPT_HP2E_RSLT_NM':'IMPT_HP2E_RSLT_NM'})
-        syn = syn.replace(999,np.NaN)
-        #syn = syn.replace(0,'No Data')
+            for col in ['BSPT_SEX_CD', 'BSPT_FRST_DIAG_NM', 'BSPT_STAG_CLSF_CD']:
+                ml_data[col].astype(str)
+                encoder.fit(ml_data[col])
+                trans = encoder.transform(ml_data[col])
+                
+                ml_data[col] = trans
+            
+            ml_data = ml_data.replace(999,np.NaN)
+            ml_data = ml_data.replace('999',np.NaN)
 
-        pkl_encode = pd.read_pickle(preprocess_1_path.joinpath(f"label_dict_{args.age}.pkl")) 
+            if not seed_output_path.joinpath(f'synthetic_decoded').exists():
+                seed_output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
+                        
+            ml_data.to_csv(seed_output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
 
-        for key in pkl_encode.keys():
-            inverse = {}
-            for k, v in pkl_encode[key].items():
-                inverse[v] = k
-            try:
-                syn[key] = syn[key].replace(inverse)
-            except:
-                pass
+            # date time restore with randomly
+            start_date = min(data['BSPT_FRST_DIAG_YMD'])
+            end_date = max(data['BSPT_FRST_DIAG_YMD'])
+            
+            date_range = pd.date_range(start_date,end_date,freq='D')
 
-        save_path = output_path.joinpath("synthetic_restore")
-        if not save_path.exists():
-            save_path.mkdir(parents=True)
+            date = []
+            for _ in range(len(syn)):
+                date.append(random.choice(date_range))
+            
+            syn.insert(4,'BSPT_FRST_DIAG_YMD', date)    
 
-        syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),encoding='cp949')
+            
+            for col in ['RLPS', 'DEAD']:
+                diff = []
+                for i in range(len(syn)):        
+                    try:
+                        diff.append((syn['BSPT_FRST_DIAG_YMD'].iloc[i] + datetime.timedelta(days=syn[col+'_DIFF'].iloc[i])).strftime("%Y-%m-%d"))
+                    except:
+                        diff.append(0)
+                syn.insert(list(syn.columns).index(col)+1 , col+'_YMD' , diff)
+
+            for i in range(1,9):
+                start_diff = []
+                end_diff = []
+                for j in range(len(syn)):        
+                    if syn[f'REGN_START_DIFF_{i}'].iloc[j] != 0:
+                        start_day = (syn['BSPT_FRST_DIAG_YMD'].iloc[j] + datetime.timedelta(days=int(syn[f'REGN_START_DIFF_{i}'].iloc[j]))).strftime("%Y-%m-%d")
+                        end_day = datetime.datetime.strptime(start_day,"%Y-%m-%d") + datetime.timedelta(days=int(syn[f'REGN_TIME_DIFF_{i}'].iloc[j]))
+                        start_diff.append(start_day)
+                        end_diff.append(end_day.strftime("%Y-%m-%d"))
+                    else:
+                        start_diff.append(np.NaN)
+                        end_diff.append(np.NaN)
+
+                syn[f'REGN_START_DIFF_{i}'] = start_diff
+
+                syn.insert(list(syn.columns).index(f'REGN_START_DIFF_{i}')+1 , f'REGN_END_DAY_{i}' , end_diff)    
+                syn = syn.rename({f'REGN_START_DIFF_{i}':f'REGN_START_DAY_{i}'})
+             
+            # read encoder, list-like
+            encoders = pd.read_pickle(preprocess_1_path.joinpath(f"LabelEncoder_{args.age}.pkl"))
+                
+            # numeric to context
+            for i in range(len(encoders)):
+                try:
+                    syn[syn.columns[i+14]] = encoders[i].inverse_transform(syn[syn.columns[i+14]])
+                except:
+                    pass
+
+            syn = syn.rename({'REGN_IMPT_HP2E_RSLT_NM':'IMPT_HP2E_RSLT_NM'})
+            syn = syn.replace(999,np.NaN)
+
+            pkl_encode = pd.read_pickle(preprocess_1_path.joinpath(f"label_dict_{args.age}.pkl")) 
+
+            for key in pkl_encode.keys():
+                inverse = {}
+                for k, v in pkl_encode[key].items():
+                    inverse[v] = k
+                try:
+                    syn[key] = syn[key].replace(inverse)
+                except:
+                    pass
+
+            save_path = seed_output_path.joinpath("synthetic_restore")
+            if not save_path.exists():
+                save_path.mkdir(parents=True)
+
+            syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),encoding='cp949')
 #%%
 
 if __name__ == "__main__" : 

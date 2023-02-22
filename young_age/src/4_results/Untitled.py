@@ -10,19 +10,19 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score
 import pickle
 
-# |%%--%%| <XjEaJACvLb|GqTXJ8PesN>
+# |%%--%%| <UwXNc8rDNF|dmPnRVuiHg>
 
 cur_file = Path(os.getcwd())
 working_dir = cur_file.parent
 parent_dir = working_dir.parent
 data_dir = parent_dir.joinpath('data')
 
-# |%%--%%| <GqTXJ8PesN|GUjMsy6YyD>
+# |%%--%%| <dmPnRVuiHg|8LUfG1aSxt>
 
 org_dir = data_dir.joinpath('processed/preprocess_1')
 syn_dir = data_dir.joinpath('processed/decoded')
 
-# |%%--%%| <GUjMsy6YyD|hhQxUgGe0k>
+# |%%--%%| <8LUfG1aSxt|jJAOsZwHq4>
 
 train = pd.read_pickle(org_dir.joinpath('train_ori_50.pkl'))
 test = pd.read_pickle(org_dir.joinpath('test_50.pkl'))
@@ -31,12 +31,12 @@ syn = pd.read_csv(syn_dir.joinpath('Synthetic_data_epsilon10000_50.csv'),index_c
 #syn = pd.read_csv('/home/dogu86/young_age_colon_cancer/final_data/synthetic_decoded/Synthetic_data_epsilon10000.csv')
 syn.rename(columns = {'RLPS_DIFF' : 'RLPS DIFF'}, inplace = True)
 
-# |%%--%%| <hhQxUgGe0k|L4rZizd14T>
+# |%%--%%| <jJAOsZwHq4|E9ChdxYaR5>
 
 test_x = test.drop(['DEAD','DEAD_DIFF','PT_SBST_NO'], axis=1)
 test_x = test_x.replace(np.NaN,999)
 
-# |%%--%%| <L4rZizd14T|cMY1DKZnH1>
+# |%%--%%| <E9ChdxYaR5|th0TonVwBg>
 
 def get_feature_importances(model,feature):
     import seaborn as sns
@@ -53,7 +53,7 @@ def get_feature_importances(model,feature):
     plt.title('Classification Feature Importances (Top 30)', fontsize=18)
     plt.show()
 
-# |%%--%%| <cMY1DKZnH1|FuVCquP1n5>
+# |%%--%%| <th0TonVwBg|mk6xewgiS0>
 
 def get_best_model(data,valid,model_name):
 
@@ -76,7 +76,7 @@ def get_best_model(data,valid,model_name):
         print('model name error')
         return 0
 
-# |%%--%%| <FuVCquP1n5|pIxfGOwDuA>
+# |%%--%%| <mk6xewgiS0|daJ0QjRGLB>
 
 def tree_like(model_name,data,valid,param):
     from sklearn.model_selection import StratifiedKFold
@@ -115,7 +115,7 @@ def tree_like(model_name,data,valid,param):
     return models[best_idx]
 
 
-# |%%--%%| <pIxfGOwDuA|JYaNObDLrP>
+# |%%--%%| <daJ0QjRGLB|unYL2w9OOP>
 
 def get_xgb(model_name,data,valid,param):
     x, y, valid_x, valid_y = get_data(data,valid)
@@ -145,7 +145,7 @@ def get_xgb(model_name,data,valid,param):
     
     return models[best_idx]
 
-# |%%--%%| <JYaNObDLrP|843EKAQxmD>
+# |%%--%%| <unYL2w9OOP|4bSbU4nxOu>
 
 def get_mlp(model_name,data,valid,param):
     x, y, valid_x, valid_y = get_data(data,valid)
@@ -172,7 +172,7 @@ def get_mlp(model_name,data,valid,param):
     
     return models[best_idx]
 
-# |%%--%%| <843EKAQxmD|jIiYXrlwBg>
+# |%%--%%| <4bSbU4nxOu|0GZiyMSl0y>
 
 def get_data(data,test):
     data = data.drop(['PT_SBST_NO'],axis=1)
@@ -191,24 +191,24 @@ def get_data(data,test):
     
     return [x,y,test_x,test_y]
 
-# |%%--%%| <jIiYXrlwBg|u2dgY6rKeJ>
+# |%%--%%| <0GZiyMSl0y|gpIPUeUM06>
 
 train_x = train.drop('DEAD',axis=1)
 train_y = train['DEAD']
 
-# |%%--%%| <u2dgY6rKeJ|3FAFIP0oXh>
+# |%%--%%| <gpIPUeUM06|nGwKfYEcex>
 
 from sklearn.model_selection import train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(train_x, train_y, test_size = 0.2, stratify=train_y)
 
-# |%%--%%| <3FAFIP0oXh|ztKFUoKqr4>
+# |%%--%%| <nGwKfYEcex|VgFoTU9scP>
 
 X_train, X_test, y_train, y_test = train_test_split(train_x, train_y, test_size = 0.2, stratify=train_y)
 real_valid = pd.concat([X_test,y_test],axis=1)
 real_train = pd.concat([X_train,y_train],axis=1)
 
-# |%%--%%| <ztKFUoKqr4|gxwPyGm1Kj>
+# |%%--%%| <VgFoTU9scP|TeWzZBYigt>
 
 
 
@@ -234,29 +234,29 @@ trtr_models = [dt_model_real,rf_model_real,xgb_model_real]
 #trtr_models = [dt_model_real,rf_model_real,mlp_model_real]
                
 
-# |%%--%%| <gxwPyGm1Kj|LLvD19nLKc>
+# |%%--%%| <TeWzZBYigt|IOtpRGaRfL>
 
 dt_model_real = get_best_model(real_train,real_valid,'dt')
 rf_model_real = get_best_model(real_train,real_valid,'rf')
 
-# |%%--%%| <LLvD19nLKc|v8u5Z9kT2R>
+# |%%--%%| <IOtpRGaRfL|FiZcztrEt5>
 
 dt_model = get_best_model(syn,real_valid,'dt')
 rf_model = get_best_model(syn,real_valid,'rf')
 
-# |%%--%%| <v8u5Z9kT2R|pvWGGrGCKA>
+# |%%--%%| <FiZcztrEt5|M40iqJARMs>
 
 print(len(real_train),len(syn))
 
-# |%%--%%| <pvWGGrGCKA|jeEApcXEP4>
+# |%%--%%| <M40iqJARMs|w4c046qyye>
 
 get_feature_importances(dt_model_real, feature=test_x.columns)
 
-# |%%--%%| <jeEApcXEP4|Dx0VkgRhYe>
+# |%%--%%| <w4c046qyye|sj71DkyHU5>
 
 get_feature_importances(dt_model, feature=test_x.columns)
 
-# |%%--%%| <Dx0VkgRhYe|ETPJQUTXbe>
+# |%%--%%| <sj71DkyHU5|lOzFOZf6Pl>
 
 from sklearn.metrics import f1_score
 from sklearn.metrics import roc_auc_score
@@ -266,13 +266,13 @@ pred = dt_model_real.predict(test_x)
 f1 = f1_score(test['DEAD'],pred,average='macro')
 f1
 
-# |%%--%%| <ETPJQUTXbe|BDEX8y8fCx>
+# |%%--%%| <lOzFOZf6Pl|jR7sc3ETio>
 
 pred = dt_model.predict(test_x)
 f1 = f1_score(test['DEAD'],pred,average='macro')
 f1
 
-# |%%--%%| <BDEX8y8fCx|DwGWGtxK51>
+# |%%--%%| <jR7sc3ETio|4C1juInS3p>
 
 X_train, X_test, y_train, y_test = train_test_split(syn.drop('DEAD',axis=1), syn['DEAD'], test_size = 0.2, stratify=syn['DEAD'])
 syn_valid = pd.concat([X_test,y_test],axis=1)
@@ -294,7 +294,7 @@ xgb_model_trts = get_best_model(real_train,syn_valid,'xgb')
 trts_models = [dt_model_trts,rf_model_trts,xgb_model_trts]
 #trts_models = [dt_model_trts,rf_model_trts,mlp_model_trts]
 
-# |%%--%%| <DwGWGtxK51|RuUVw4A9oI>
+# |%%--%%| <4C1juInS3p|djtiXm0MoB>
 
 #모델 저장
 
@@ -311,7 +311,7 @@ with open(save_dir.joinpath('trtr_models.pkl'), 'wb') as f:
     
 
 
-# |%%--%%| <RuUVw4A9oI|wSw0Tk0fvt>
+# |%%--%%| <djtiXm0MoB|8ota1kgsY0>
 
 # load
 save_dir = cur_file.joinpath('ml_models')
@@ -326,7 +326,7 @@ with open(save_dir.joinpath('trtr_models.pkl'), 'rb') as f:
 
 
 
-# |%%--%%| <wSw0Tk0fvt|tImUbvgcAt>
+# |%%--%%| <8ota1kgsY0|acwwOlLEUk>
 
 model_arr = [trtr_models,tstr_models,trts_models,tsts_models]
 score_by_case = []
@@ -337,7 +337,7 @@ for models in model_arr:
         scores.append(f1.mean())
     score_by_case.append(scores)
 
-# |%%--%%| <tImUbvgcAt|6MC5DmdwC5>
+# |%%--%%| <acwwOlLEUk|sAGVPspPJ9>
 
 score_by_case = []
 from sklearn.metrics import f1_score
@@ -349,7 +349,7 @@ for models in model_arr:
         scores.append(f1)
     score_by_case.append(scores)
 
-# |%%--%%| <6MC5DmdwC5|4qnS8jltfR>
+# |%%--%%| <sAGVPspPJ9|qs24LdWzUb>
 
 import matplotlib.pyplot as plt
 import scienceplots
@@ -395,39 +395,39 @@ plt.title('Training Strategy results comparison(Epsilon=10000)', fontsize=14)
 
 plt.show()
 
-# |%%--%%| <4qnS8jltfR|h81UZdPvva>
+# |%%--%%| <qs24LdWzUb|oWN73NXCaF>
 
 #trtr
 get_feature_importances(tsts_models[1],feature=test_x.columns)
 
 
-# |%%--%%| <h81UZdPvva|aZEwMF44Db>
+# |%%--%%| <oWN73NXCaF|PcxWxpllki>
 
 #tstr
 get_feature_importances(model_arr[1][1],feature=test_x.columns)
 
-# |%%--%%| <aZEwMF44Db|ZM5CjSVJwj>
+# |%%--%%| <PcxWxpllki|oXRzgRiRNG>
 
 syn['DEAD'].value_counts()
 
-# |%%--%%| <ZM5CjSVJwj|J7qK3U9381>
+# |%%--%%| <oXRzgRiRNG|QqU6wbZFVA>
 
 syn['RLPS'].value_counts()
 
-# |%%--%%| <J7qK3U9381|HRQwMMdPV0>
+# |%%--%%| <QqU6wbZFVA|hyBJvD1GmF>
 
 train['RLPS'].value_counts()
 
-# |%%--%%| <HRQwMMdPV0|GNWMTIXySV>
+# |%%--%%| <hyBJvD1GmF|Bd4TMnlKsB>
 
 syn.columns
 
-# |%%--%%| <GNWMTIXySV|QhgOlZbkiO>
+# |%%--%%| <Bd4TMnlKsB|PCHY4aREFw>
 
 import os
 print(os.environ['PATH'])
 
-# |%%--%%| <QhgOlZbkiO|4Sa2DyCpDP>
+# |%%--%%| <PCHY4aREFw|tX013BTGaD>
 
 import matplotlib.pyplot as plt
 
@@ -445,6 +445,6 @@ for i, v in enumerate(data):
 # Show the plot
 plt.show()
 
-# |%%--%%| <4Sa2DyCpDP|V45i5RzOhW>
+# |%%--%%| <tX013BTGaD|NbY1ariRez>
 
 

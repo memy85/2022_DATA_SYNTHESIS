@@ -70,27 +70,134 @@ class CorrelationChecker:
         
         self.difference = abs(corrmatrix1 - corrmatrix2)
         return self.difference
-         
-#%%
 
-cols = [
-    "BSPT_IDGN_AGE",
-    "BSPT_SEX_CD",
-    "BSPT_FRST_DIAG_NM",
-    "SGPT_PATL_T_STAG_VL",
-    "SGPT_PATL_N_STAG_VL",
-    "SGPT_PATL_STAG_VL",
-    "BSPT_STAG_VL",
-    "MLPT_KRES_RSLT_NM",
-    "IMPT_HM1E_RSLT_NM",
-    "IMPT_HS2E_RSLT_NM",
-    "IMPT_HS6E_RSLT_NM",
-    "IMPT_HP2E_RSLT_NM",
-    "DEAD",
-    "OVRL_SURV",
-    "LNE_CHEMO",
-    "ADJ_CNT"
-]
+def decode(whole_encoded_df, tables, bind_data_columns):
+    
+    np_encoded = np.array(whole_encoded_df)
+    np_encoded = np_encoded.astype(str)
+    restored = pd.DataFrame()
+
+    for k in range(len(np_encoded.transpose())):
+        temp1 = []
+        for i in np_encoded.transpose()[k]:
+            temp2=[]
+            a =''
+            for j in range(len(i)):
+                a+=i[j]
+                if((j+1)%3==0):
+                    temp2.append(a)
+                    if(len(a)!=3):
+                        print('error')
+                    a=''
+            
+            temp1.append(temp2)
+        sep_df = pd.DataFrame(temp1)
+        restored = pd.concat([restored,sep_df],axis=1)
+        
+    cols = []
+    for head in tables:
+        columns = list(filter(lambda x : head in x, bind_data_columns))
+        for col in columns:
+            cols.append(col)
+
+    return restored
+         
+def prepare_original_data(age) :
+
+    original_data_path = get_path(f"data/processed/preprocess_1/encoded_D0_{age}.csv")
+    data = pd.read_csv(original_data_path)
+
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+
+    tables= []
+    for col in bind_columns:
+            tables.append('_'.join(col.split('_')[0:1]))
+    try:
+        data = data.drop('Unnamed: 0', axis=1)
+    except:
+        pass
+    data = data.astype(str)
+
+    for col in data.iloc[:,11:]:
+        data[col] = data[col].str.replace('r','')
+        
+    decoded = decode(data.iloc[:,11:], tables, bind_columns)
+    decoded.columns = bind_columns
+
+    data.reset_index(drop=True, inplace=True)
+    
+    data = pd.concat([data.iloc[:,:11],decoded],axis=1)
+    data = data.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
+    data = data.drop(columns = "PT_SBST_NO")
+    data['BSPT_STAG_VL'] = data['BSPT_STAG_VL'].astype('float').astype('object')
+
+    return data
+
+def prepare_synthetic_data(age) :
+
+    epsilons = config['epsilon']
+    synthetic_data_list = []
+
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+
+    tables= []
+    for col in bind_columns:
+            tables.append('_'.join(col.split('_')[0:1]))
+
+    synthetic_path = get_path("data/processed/2_produce_data")
+    for epsilon in epsilons:
+        syn = pd.read_csv(synthetic_path.joinpath(f'S0_mult_encoded_{epsilon}_{age}.csv'))
+
+        try:
+            syn = syn.drop('Unnamed: 0', axis=1)
+        except:
+            pass
+        syn = syn.astype(str)
+
+        for col in syn.iloc[:,11:]:
+            syn[col] =syn[col].str.replace('r','')
+            
+        decoded = decode(syn.iloc[:,11:], tables, bind_columns)
+        decoded.columns = bind_columns
+        
+        syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
+        syn = syn.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
+        syn = syn.drop(columns = 'PT_SBST_NO')
+        syn['BSPT_STAG_VL'] = syn['BSPT_STAG_VL'].astype('float').astype('object')
+
+        synthetic_data_list.append(syn)
+    return synthetic_data_list
+
+def calculate_correlation_diff_for_all_variables() :
+    args = argument_parse()
+
+    original = prepare_original_data(args.age)
+    synthetic_data_list = prepare_synthetic_data(args.age)
+    
+    for idx, epsilon in enumerate(config['epsilon']) :
+        processor = CorrelationChecker(original, synthetic_data_list[idx]) 
+        plot_correlation_for_all_variables(processor, epsilon, args.age)
+
+def plot_correlation_for_all_variables(processor, epsilon, age) :
+    diff = processor.calculate_correlation_diff()
+
+    cols = list(processor.data1columns)
+    fig, ax = plt.subplots(figsize = (12,12))
+
+    # im = ax.imshow(diff, cmap='YlGn')
+    plt.pcolor(diff, cmap='YlGn', vmin = 0, vmax=0.8)
+    # cbar = ax.figure.colorbar(im, ax = ax, cmap='YlGn')
+    plt.colorbar( ax = ax )
+
+    plt.xticks(np.arange(diff.shape[1]), labels = cols, rotation=90)
+    plt.yticks(np.arange(diff.shape[1]), labels = cols)
+    plt.tick_params(axis = 'both', labelsize = 7)
+
+    plt.title("Correlation Difference, $\epsilon =$ {}".format(epsilon))
+    plt.savefig(figure_path.joinpath(f"correlation_all_{epsilon}_{age}.png"), dpi=300)
+    plt.show()
+
+#%%
 
 def load_pickle(path) :
     df = pd.read_pickle(path) 
@@ -104,6 +211,26 @@ def argument_parse():
 #%%
 def main() : 
     args = argument_parse()
+
+    cols = [
+        "BSPT_IDGN_AGE",
+        "BSPT_SEX_CD",
+        "BSPT_FRST_DIAG_NM",
+        "SGPT_PATL_T_STAG_VL",
+        "SGPT_PATL_N_STAG_VL",
+        "SGPT_PATL_STAG_VL",
+        "BSPT_STAG_VL",
+        "MLPT_KRES_RSLT_NM",
+        "IMPT_HM1E_RSLT_NM",
+        "IMPT_HS2E_RSLT_NM",
+        "IMPT_HS6E_RSLT_NM",
+        "IMPT_HP2E_RSLT_NM",
+        "DEAD",
+        "OVRL_SURV",
+        "LNE_CHEMO",
+        "ADJ_CNT"
+    ]
+
 
     original_path = get_path(f'data/processed/3_evaluate_data/matched_org_{args.age}.pkl')
 
@@ -121,9 +248,6 @@ def main() :
 
         processor = CorrelationChecker(original, synthetic_data_list[idx]) 
         plot_correlation(processor, epsilon, args.age)
-
-    
-            
 
 #%%
 
@@ -149,7 +273,8 @@ def plot_correlation(processor, epsilon, age) :
 #%%
 if __name__ == "__main__" :
 
-    main() 
+    # main() 
+    calculate_correlation_diff_for_all_variables()
     
 #%%
 
