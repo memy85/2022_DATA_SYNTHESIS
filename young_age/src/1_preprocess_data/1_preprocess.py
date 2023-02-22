@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 
 from itertools import product
 
+random_seed = config['randomseed']
 
 #%%
 def argument_parse():
@@ -248,7 +249,7 @@ def main():
     #%% split train and valid      
 
     encoded = pd.read_csv(output_path.joinpath(f'encoded_D0_{args.age}.csv'))
-    sampled = encoded.sample(frac= 0.8, random_state = 0)
+    sampled = encoded.sample(frac= 0.8, random_state = random_seed)
     train_idx = sampled.index
 
     with open(output_path.joinpath(f"train_idx_{args.age}.pkl"), 'wb') as f:

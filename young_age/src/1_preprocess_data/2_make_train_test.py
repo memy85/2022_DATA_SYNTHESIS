@@ -8,8 +8,8 @@ from pathlib import Path
 import os, sys
 import argparse
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -72,6 +72,7 @@ def main():
 
     #%%
     encoded = pd.read_csv(output_path.joinpath(f'encoded_D0_{age}.csv'))
+
     #%%
     train = unmodified_D0.loc[encoded.index.isin(train_idx)].copy()
     test = unmodified_D0.loc[~encoded.index.isin(train_idx)].copy()
@@ -90,4 +91,21 @@ if __name__ == "__main__":
     main()
 
 
+
+#%% test the above codes
+#age = 50
+
+#original = pd.read_pickle(input_path.joinpath(f"original_{age}.pkl"))
+#unmodified_D0 = pd.read_pickle(input_path.joinpath(f"unmodified_D0_{age}.pkl"))
+#train_idx = pd.read_pickle(input_path.joinpath(f"train_idx_{age}.pkl"))
+
+##%%
+#encoded = pd.read_csv(output_path.joinpath(f'encoded_D0_{age}.csv'))
+
+##%%
+#train = unmodified_D0.loc[encoded.index.isin(train_idx)].copy()
+#test = unmodified_D0.loc[~encoded.index.isin(train_idx)].copy()
+
+#train = restore_to_learnable(train, original)
+#test = restore_to_learnable(test, original)
 

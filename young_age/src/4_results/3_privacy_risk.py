@@ -139,16 +139,19 @@ class IdentityDisclosureRisk :
         fn = self.train_total - tp
         tn = self.test_total - fp
 
-        precision = tp / (tp + fp)
-        if np.isnan(precision) :
+        if tp + fp == 0 : 
             precision = 0.0
+
         recall = tp / (tp + fn)
+        f1_score = 2*(precision * recall) / (precision + recall)
+        if np.isnan(f1_score) :
+            f1_score = 0.0
 
         score = pd.DataFrame([
             {"tp" : tp, "tn" : tn, "fp" : fp, "fn" : fn, 
              "precision" : tp / (tp + fp), 
              "recall" : tp / (tp + fn),
-             "f1_score" : 2*(precision * recall) / (precision + recall)}
+             "f1_score" : f1_score }
         ])
 
         if tp + fp <= 0.0  :
@@ -165,15 +168,19 @@ class IdentityDisclosureRisk :
     def make_score(self) :
 
         precision = self.tp / (self.tp + self.fp)
+
         if np.isnan(precision) :
             precision = 0.0
         recall = self.tp / (self.tp + self.fn)
+        self.f1_score = 2*(precision * recall) / (precision + recall)
+        if np.isnan(f1_score) :
+            self.f1_score = 0.0
 
         self.score = pd.DataFrame([
             {"tp" : self.tp, "tn" : self.tn, "fp" : self.fp, "fn" : self.fn, 
              "precision" : self.tp / (self.tp + self.fp), 
              "recall" : self.tp / (self.tp + self.fn),
-             "f1_score" : 2*(precision * recall) / (precision + recall)}
+             "f1_score" : self.f1_score}
             ])
 
         if self.tp + self.fp <= 0.0  :

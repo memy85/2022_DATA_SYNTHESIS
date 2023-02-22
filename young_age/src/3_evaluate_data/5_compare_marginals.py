@@ -22,7 +22,6 @@ print(f" this is project path : {project_path} ")
 
 age = 50
 
-
 #%% path settings
 
 config = load_config()
