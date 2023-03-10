@@ -178,7 +178,32 @@ def calculate_correlation_diff_for_all_variables() :
         processor = CorrelationChecker(original, synthetic_data_list[idx]) 
         plot_correlation_for_all_variables(processor, epsilon, args.age)
 
-def plot_correlation_for_all_variables(processor, epsilon, age) :
+def calculate_correlation_diff_for_all_variables_no_bind() :
+    args = argument_parse()
+
+    no_bind_path = project_path.joinpath("data/processed/no_bind")
+    original = pd.read_csv(no_bind_path.joinpath('encoded_D0_to_syn_50.csv'))
+    original = original.drop(columns = 'PT_SBST_NO')
+
+    # synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{args.age}.csv'))
+    #                        for epsilon in config['epsilon']]
+    synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{50}.csv'))
+                           for epsilon in config['epsilon']]
+
+    def drop_column(data, columns):
+        data = data.drop(columns = columns)
+        return data
+
+    synthetic_data_list = list(map(lambda x : drop_column(x, 'PT_SBST_NO'), synthetic_data_list))
+
+    for idx, epsilon in enumerate(config['epsilon']) :
+        processor = CorrelationChecker(original, synthetic_data_list[idx]) 
+        figure_name = f"correlation_all_{epsilon}_{args.age}_no_bind.png"
+        plot_correlation_for_all_variables(processor, epsilon, args.age, figure_name)
+
+
+
+def plot_correlation_for_all_variables(processor, epsilon, age, figure_name = None) :
     diff = processor.calculate_correlation_diff()
 
     cols = list(processor.data1columns)
@@ -194,7 +219,11 @@ def plot_correlation_for_all_variables(processor, epsilon, age) :
     plt.tick_params(axis = 'both', labelsize = 7)
 
     plt.title("Correlation Difference, $\epsilon =$ {}".format(epsilon))
-    plt.savefig(figure_path.joinpath(f"correlation_all_{epsilon}_{age}.png"), dpi=300)
+
+    if figure_name is None : 
+        figure_name = f"correlation_all_{epsilon}_{age}.png"
+
+    plt.savefig(figure_path.joinpath(figure_name), dpi=300)
     plt.show()
 
 #%%
@@ -274,7 +303,9 @@ def plot_correlation(processor, epsilon, age) :
 if __name__ == "__main__" :
 
     # main() 
-    calculate_correlation_diff_for_all_variables()
+    # calculate_correlation_diff_for_all_variables()
+    calculate_correlation_diff_for_all_variables_no_bind()
+
     
 #%%
 

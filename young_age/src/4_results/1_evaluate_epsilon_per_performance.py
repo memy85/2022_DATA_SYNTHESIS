@@ -12,9 +12,10 @@ import os
 import sys
 from pathlib import Path
 import argparse
+from sklearn.model_selection import train_test_split
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path().cwd()
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path().cwd()
 
 os.sys.path.append(project_path.as_posix())
 
@@ -23,7 +24,6 @@ from src.MyModule.ml_function import *
 from src.MyModule.utils import *
 
 print(f" this is project path : {project_path} ")
-
 
 #%% path settings
 
@@ -81,25 +81,18 @@ def main() :
     train_ori = pd.read_pickle(train_ori_path)
     test = pd.read_pickle(testset_path)
 
-    #%%
-
     test.drop(["PT_SBST_NO"], axis=1, inplace=True)
     test = test.rename(columns = {"RLPS DIFF":"RLPS_DIFF"})
     train_ori.drop(["PT_SBST_NO"], axis=1, inplace=True)
     train_ori = train_ori.rename(columns={"RLPS DIFF": "RLPS_DIFF"})
     synthetic_data_list = list(map(lambda x: x.drop(
         ["PT_SBST_NO", "Unnamed: 0"], axis=1), synthetic_data_list))
-    #%%
-
+    
     synthetic_data_dict = {"eps_{}".format(config['epsilon'][idx]) : data for idx, data in enumerate(synthetic_data_list) }
-
-    #%%
 
     # train_ori.shape
     # test.shape
     # synthetic_data_list[0].shape
-
-#%%
 
 
 #%% set all the outcome and needless variables
@@ -107,7 +100,6 @@ def main() :
 ################################################################# machine learning
 ################################################################# machine learning
 
-    from sklearn.model_selection import train_test_split
 
     outcome = "DEAD"
     drop_columns = [outcome, "DEAD_DIFF", "OVR_SURV"] 
@@ -157,7 +149,6 @@ def get_results(original, synthetic, test, synthetic_dict, output_path) :
 
     model_names = [
         "DecisionTree", "RandomForest", "XGBoost",
-        "KNN", 'LogisticRegression'
     ]
     model_path = output_path.joinpath("best_models")
     #%%
@@ -207,26 +198,23 @@ def get_results(original, synthetic, test, synthetic_dict, output_path) :
 
     scoreDF = pd.DataFrame(scores)
 
-    scoreDF.to_csv(output_path.joinpath("fig1score.csv"), index=False)
+    scoreDF.to_csv(output_path.joinpath("fig1score_tstr.csv"), index=False)
 
     print("finished saving the output!")
 
 if __name__ == "__main__" :
     main()
 
-#%% New test code using the Cross Validation
 
-################################################################# Machine Learning
-################################################################# Machine Learning
-################################################################# Machine Learning
 
 #%%
 
-scoreDF = pd.read_csv(output_path.joinpath("fig1score.csv"))
+# output_path = get_path("data/processed/4_results/")
+# scoreDF = pd.read_csv(output_path.joinpath("fig1score.csv"))
 
-scoreDF = scoreDF[scoreDF.type != 'eps_0'][['model', 'type', 'auroc', 'f1_score']]
-#%%
-scoreDF
+#scoreDF = scoreDF[scoreDF.type != 'eps_0'][['model', 'type', 'auroc', 'f1_score']]
+##%%
+#scoreDF
 
 ##%% plot data
 #import scienceplots

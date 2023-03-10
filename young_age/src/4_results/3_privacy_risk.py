@@ -1,8 +1,8 @@
 
+#%%
 import scienceplots
 
 from xgboost import XGBClassifier
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from scipy.spatial.distance import hamming
@@ -14,8 +14,8 @@ from pathlib import Path
 import argparse
 import swifter
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path().cwd()
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path().cwd()
 
 os.sys.path.append(project_path.as_posix())
 
@@ -41,7 +41,6 @@ if not output_path.exists():
     output_path.mkdir(parents=True)
 
 #%%
-
 
 class Classifier :
 
@@ -173,6 +172,8 @@ class IdentityDisclosureRisk :
             precision = 0.0
         recall = self.tp / (self.tp + self.fn)
         self.f1_score = 2*(precision * recall) / (precision + recall)
+        f1_score = self.f1_score
+
         if np.isnan(f1_score) :
             self.f1_score = 0.0
 
@@ -194,6 +195,7 @@ def load_pickle(path) :
     return df.copy()
 
 #%% prepare data
+
 def load_data(age) :
 
     test_data_path = get_path(f"data/processed/preprocess_1/test_{age}.pkl")
@@ -239,8 +241,10 @@ def parse_args() :
     return args
 
 def main() :
-    args = parse_args()
-    train, test, synthetic_data_list = load_data(args.age)
+    # args = parse_args()
+    # age = args.age
+    age = 50
+    train, test, synthetic_data_list = load_data(age)
 
     data_lists = []
     for idx, epsilon in enumerate(config["epsilon"]) :
@@ -249,14 +253,20 @@ def main() :
         df = privacy.calculate_with_new_threshold(0.3)
         df['epsilon'] = epsilon
         data_lists.append(df)
-    #%%
 
     metric_results = pd.concat(data_lists)
-    metric_results.to_csv(output_path.joinpath(f'privacy_test_{age}.csv'), index=False)
+    return metric_results
+    # metric_results.to_csv(output_path.joinpath(f'privacy_test_{age}.csv'), index=False)
 
 #%%
 if __name__ == "__main__" :
 
     main()
 #%%
+
+result = main()
+
+#%% check results of the data
+result
+
 

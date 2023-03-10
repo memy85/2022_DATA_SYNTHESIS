@@ -1,3 +1,4 @@
+#%%
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -5,13 +6,14 @@ import os, sys
 import argparse
 
 
-temp = pd.read_excel('/mnt/synthetic_data/data/raw/CLRC_TRTM_CASB.xlsx')
-pt_num = list(pd.read_csv('/home/dogu86/pt_num.csv')['PT_SBST_NO']) # under 50 patients number
+temp = pd.read_excel('/home/wonseok/projects/2022_DATA_SYNTHESIS/data/raw/CLRC_TRTM_CASB.xlsx')
+pt_num = list(pd.read_excel('/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age/data/raw/D0_Handmade_ver1.1.xlsx')['PT_SBST_NO']) # under 50 patients number
 
 print(f'Target patient number : {str(len(pt_num))}')
 
 regn = temp[temp['PT_SBST_NO'].isin(pt_num)].drop(['CENTER_CD','IRB_APRV_NO'],axis =1)
 
+#%%
 def transform_format(data, syn = False, droped = False):
     
     counts = []  
@@ -34,7 +36,18 @@ def transform_format(data, syn = False, droped = False):
 
 def main():
     np_regn = transform_format(regn)
+    
+    from datetime import datetime, timedelta
 
+    # To make end date
+    for i in range(len(np_regn)):
+        
+        new_end_days = np_regn[i].transpose()[1][1:]
+        last = (pd.to_datetime(np_regn[i].transpose()[1][-1], format = '%Y%m%d')+ timedelta(weeks=2)).strftime("%Y%m%d")
+
+        new_end_days = np.append(new_end_days,int(last))
+        np_regn[i].transpose()[6] = new_end_days
+        
     len_arr = []
     for i in range(len(np_regn)):
         len_arr.append(len(np.unique(np_regn[i].transpose()[4])))
