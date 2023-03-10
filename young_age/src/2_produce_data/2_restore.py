@@ -20,9 +20,11 @@ from src.MyModule.utils import *
 
 config = load_config()
 project_path = Path(config["project_path"])
-input_path = get_path("data/processed/2_produce_data")
+input_path = get_path("data/processed/no_bind")
+# input_path = get_path("data/processed/2_produce_data")
 preprocess_1_path = get_path("data/processed/preprocess_1")
-output_path = get_path("data/processed/2_produce_data")
+# output_path = get_path("data/processed/2_produce_data")
+output_path = get_path("data/processed/no_bind/restored")
 if not output_path.exists() : 
     output_path.mkdir(parents=True)
 
@@ -96,21 +98,21 @@ def argument_parse():
 
 def main():
     args = argument_parse()
-#%%
     raw_path = get_path("data/raw/D0_Handmade_ver1.1.xlsx")
-
 
     data = pd.read_excel(raw_path)
 
     #%% read bind colums
     bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{args.age}.pkl"))
+    # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{50}.pkl"))
 
     #%%
     tables= []
     for col in bind_columns:
             tables.append('_'.join(col.split('_')[0:1]))
 
-    seeds = [i for i in range(0,config['randomseed'])]
+    # seeds = [i for i in range(0,config['randomseed'])]
+    seeds = [0]
     for seed in seeds:
 
         seed_input_path = input_path.joinpath(f'seed{seed}')
@@ -120,23 +122,27 @@ def main():
         for epsilon in epsilons:
 
             syn = pd.read_csv(seed_input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+            # syn = pd.read_csv(seed_input_path.joinpath(f'S0_mult_encoded_{epsilon}_{50}.csv'))
 
             try:
                 syn = syn.drop('Unnamed: 0', axis=1)
             except:
                 pass
             syn = syn.astype(str)
-
-            for col in syn.iloc[:,11:]:
-                syn[col] =syn[col].str.replace('r','')
-                
-            decoded = decode(syn.iloc[:,11:], tables, bind_columns)
-            decoded.columns = bind_columns
-            
-            syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
+            # need to comment it if you do it with bind columns
+            syn = syn.replace('nan', 999)
+#%%
+            # uncomment if the columns are binded!!
+            # for col in syn.iloc[:,11:]:
+            #     syn[col] =syn[col].str.replace('r','')
+            #     
+            # decoded = decode(syn.iloc[:,11:], tables, bind_columns)
+            # decoded.columns = bind_columns
+            # 
+            # syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
             syn = syn.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
-            
-            # continous restore    
+             
+            # # continous restore    
             syn['BSPT_IDGN_AGE'] = syn['BSPT_IDGN_AGE'].astype(int)
             ages=[]
             for age in syn['BSPT_IDGN_AGE']:
@@ -149,11 +155,11 @@ def main():
             syn['BSPT_IDGN_AGE'] =  ages
 
             days = ['OVR_SURV','RLPS_DIFF','DEAD_DIFF']
-            
+
             for i in range(1,9):
                 days.append(f'REGN_TIME_DIFF_{i}')
                 days.append(f'REGN_START_DIFF_{i}')
-            
+
             for col in days:
                 syn[col] = syn[col].astype(float)
                 num = 30
@@ -162,19 +168,20 @@ def main():
                 elif col[:4] == 'REGN':
                     num = 15
                 syn = restore_day(syn, col, num)
-            
+
+            # uncomment if the columns are binded!!
             for col in list(syn.columns)[11:]:
-                syn[col] = syn[col].astype(int)
-            
+                syn[col] = syn[col].astype(float).astype(int)
             
             # Label Encoding for ml
             ml_data=syn.copy()
             encoder = LabelEncoder() 
+            #%%
             
             ####### ML data #############################################################################################################################
 
             for col in ['BSPT_SEX_CD', 'BSPT_FRST_DIAG_NM', 'BSPT_STAG_CLSF_CD']:
-                ml_data[col].astype(str)
+                ml_data[col] = ml_data[col].astype(str)
                 encoder.fit(ml_data[col])
                 trans = encoder.transform(ml_data[col])
                 
@@ -185,8 +192,11 @@ def main():
 
             if not seed_output_path.joinpath(f'synthetic_decoded').exists():
                 seed_output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
+#%%
                         
             ml_data.to_csv(seed_output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
+
+#%%
 
             # date time restore with randomly
             start_date = min(data['BSPT_FRST_DIAG_YMD'])
@@ -255,6 +265,7 @@ def main():
             save_path = seed_output_path.joinpath("synthetic_restore")
             if not save_path.exists():
                 save_path.mkdir(parents=True)
+#%%
 
             syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),encoding='cp949')
 #%%

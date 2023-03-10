@@ -15,6 +15,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_val_
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
+from sklearn.metrics import average_precision_score as auprc_score 
 from src.MyModule.utils import *
 
     
@@ -34,7 +35,6 @@ def train_and_test(model_name, **kwargs):
     use_scaler = kwargs['scaler']
 
     best_model, scaler = get_best_model(model_name, train_x, train_y, valid_x, valid_y)
-    save_model(model_path, model_name, best_model)
 
     if best_model == 0 :
         assert False, "there the there is no model named {}".format(model_name)
@@ -44,9 +44,10 @@ def train_and_test(model_name, **kwargs):
     train_y = pd.concat([train_y, valid_y], axis = 0)
 
     updated_best_model = best_model.fit(train_x, train_y)
+    save_model(model_path, model_name, updated_best_model)
 
     testset = (test_x, test_y)
-    accuracy, auc, f1 = test_model(testset, updated_best_model, scaler)
+    accuracy, auc, f1, auprc = test_model(testset, updated_best_model, scaler)
     return accuracy, auc, f1
 
 def test_model(test_data, model, scaler = None):
@@ -60,8 +61,9 @@ def test_model(test_data, model, scaler = None):
     accuracy = accuracy_score(y, pred)
     auc = roc_auc_score(y, pred)
     f1 = f1_score(y, pred)
+    auprc = auprc_score(y, prd)
 
-    return accuracy, auc, f1
+    return accuracy, auc, f1, auprc
 
 def get_best_model(model_name, train_x, train_y, valid_x, valid_y):
     

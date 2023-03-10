@@ -13,7 +13,8 @@ import pandas as pd
 import numpy as np
 
 config = load_config()
-input_path = get_path("data/processed/2_produce_data")
+# input_path = get_path("data/processed/2_produce_data")
+input_path = get_path("data/processed/no_bind")
 output_path = get_path("data/processed/3_evaluate_data/")
 figure_path = get_path("figures/")
 
@@ -265,6 +266,61 @@ def prepare_synthetic_data(age) :
     return synthetic_data_list
 
 #%%
+def calculate_hellinger_unbinded() :
+    args = argument_parser()
+    no_bind_path = project_path.joinpath("data/processed/no_bind")
+    original = pd.read_csv(no_bind_path.joinpath('encoded_D0_to_syn_50.csv'))
+    original = original.drop(columns = 'PT_SBST_NO')
+
+    # synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{args.age}.csv'))
+    #                        for epsilon in config['epsilon']]
+    synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{50}.csv'))
+                           for epsilon in config['epsilon']]
+#%%
+    def drop_column(data, columns):
+        data = data.drop(columns = columns)
+        return data
+
+    synthetic_data_list = list(map(lambda x : drop_column(x, 'PT_SBST_NO'), synthetic_data_list))
+
+    columns = original.columns.tolist()
+    print(f'columns of original data : {len(columns)}')
+    print(f'columns of synthetic data : {len(synthetic_data_list[0].columns)} ')
+
+    hd_list = []
+    for idx, epsilon in enumerate(config['epsilon']) :
+
+        hd_dict = {}
+        hd_dict['epsilon'] = epsilon
+        synthetic = synthetic_data_list[idx]
+    
+        for col in columns :
+            dtype = get_variable_type(col, original) 
+
+            if col == "BSPT_STAG_VL" :
+                ori = original[col].astype('float')
+                syn = synthetic[col].astype('float')
+
+            else : 
+                ori = original[col]
+                syn = synthetic[col]
+
+            ori = CategoricalVariable(ori)
+            syn = CategoricalVariable(syn)
+
+            hd = hellinger_distance(ori, syn)
+
+            hd_dict[col] = hd
+        hd_list.append(hd_dict)
+        #%%
+
+    hd_info = pd.DataFrame(hd_list)
+    hd_info.to_csv(output_path.joinpath('hd_info_all_columns_no_bind.csv'), index=False)
+    print("successfully ended calculatign hellinger distance for all variables")
+    return 0
+#%%
+
+#%%
 
 
 def calculate_hellinger_for_all_variables() :
@@ -392,18 +448,7 @@ def main() :
 #%%
 if __name__ == "__main__" :
     # main()
-    calculate_hellinger_for_all_variables()
+    # calculate_hellinger_for_all_variables()
+    calculate_hellinger_unbinded()
 
 #%%
-# df = pd.read_csv(output_path.joinpath('hd_info.csv'))
-
-#%%
-
-original = prepare_original_data(50)
-synthetic_data_list = prepare_synthetic_data(50)
-#%%
-
-original['BSPT_STAG_VL'].unique()
-#%%
-synthetic_data_list[0]['BSPT_STAG_VL'].unique()
-

@@ -1,3 +1,4 @@
+
 #%%
 import os
 from pathlib import Path
@@ -19,20 +20,13 @@ from src.MyModule.utils import *
 from pathlib import Path
 from sklearn.model_selection import train_test_split 
 from imblearn.under_sampling import RandomUnderSampler
-from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, average_precision_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 import argparse
 
 config = load_config()
 
 #%%
 
-# syn = pd.read_csv(syn_dir.joinpath('Synthetic_data_epsilon10000_50.csv'),index_col = 0)
-
-def argument_parse():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--age", default = 50, type = int)
-    args = parser.parse_args()
-    return args
 
 def process_synthetic(synthetic) :
     '''
@@ -46,13 +40,17 @@ def process_synthetic(synthetic) :
     return (syn_x, syn_y)
 
 
-def prepare_data(data) :
+def prepare_data(data, columns) :
+    '''
+    erase data that are not available at NCC
+    '''
     data = data.copy()
-    data.rename(columns = {"RLPS_DIFF" : "RLPS DIFF"}, inplace =True)
-    data = data.drop(["DEAD_DIFF", "PT_SBST_NO", "OVR_SURV", "Unnamed: 0"], axis = 1)
-    data = data.fillna(999)
-    return data
+    data = data[columns].copy()
 
+    data = data.drop(["DEAD_DIFF", "PT_SBST_NO", "OVR_SURV"], axis = 1)
+    data = data.fillna(999)
+
+    return data
 
 def train_real_real(original):
 
@@ -109,28 +107,28 @@ def test_model(model_list, type, epsilon, test) :
         auroc = roc_auc_score(test_y,pred)
         f1score = f1_score(test_y, pred)
         accuracy = accuracy_score(test_y, pred)
-        auprc = average_precision_score(test_y, pred)
 
         book = {'model' : model_names[idx],
                 "type": type,
                 "epsilon":  epsilon,
                 "auroc" : auroc,
                 "f1_score": f1score,
-                "accuracy": accuracy,
-                "auprc" : auprc}
+                "accuracy": accuracy}
 
         scores.append(book)
     return scores
 
 #%%
 def main() :
-    args = argument_parse()
-    age = args.age
+    with open(output_path.joinpath('sev_columns.pkl'), 'rb') as f:
+        filtered_columns = pickle.load(f)
 
-    train = pd.read_pickle(org_dir.joinpath(f'train_ori_{age}.pkl'))
+    train = pd.read_pickle(org_dir.joinpath(f'train_ori_50.pkl'))
+    train = train[filtered_columns].copy()
     train = train.replace(np.NaN, 999)
 
-    test = pd.read_pickle(org_dir.joinpath(f'test_{age}.pkl'))
+    test = pd.read_pickle(org_dir.joinpath(f'test_50.pkl'))
+    test = test[filtered_columns].copy()
     test = test.fillna(999)
 
     train=train.drop(['DEAD_DIFF','PT_SBST_NO','OVR_SURV'], axis=1)
@@ -141,12 +139,17 @@ def main() :
     test_x = test.drop(['DEAD','DEAD_DIFF','PT_SBST_NO','OVR_SURV'], axis=1)
     test_y = test['DEAD']
 
-    synthetic_data_list = [pd.read_csv(syn_dir.joinpath(f"Synthetic_data_epsilon{eps}_{age}.csv")) for eps in config['epsilon']]
+    synthetic_data_list = [pd.read_csv(syn_dir.joinpath(f"Synthetic_data_epsilon{eps}_50.csv")) for eps in config['epsilon']]
 
-    syn_list = list(map(prepare_data, synthetic_data_list))
+    syn_list = list(map(lambda data : prepare_data(data, filtered_columns), synthetic_data_list))
     syn_list = list(map(process_synthetic, syn_list))
 
     rr_models = train_real_real((train_x, train_y))
+
+    # save the trvr model
+    with open(output_path.joinpath("trvr_models.pkl"), 'wb') as f:
+        pickle.dump(rr_models, f)
+
     rr_results = test_model(rr_models, 'trtr', 0, (test_x, test_y))
     all_test_result = rr_results.copy()
     # rr_result -> list. Thus you need to append to this 
@@ -155,15 +158,24 @@ def main() :
 
         syn_x, syn_y = syn_list[idx]
         strategy_list = get_results((train_x, train_y), (syn_x, syn_y))
+        
+        with open(output_path.joinpath(f'strategy_list_epsilon{epsilon}.pkl'),'wb') as f :
+            pickle.dump(strategy_list, f)
 
         for j, train_type in enumerate(['tstr', 'trts', 'tsts']) :
             result = test_model(strategy_list[j], train_type, epsilon, (test_x, test_y))
             all_test_result.extend(result)
 
     test_result = pd.DataFrame(all_test_result)
-    test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}.csv'),index=False)
+    test_result.to_csv(output_path.joinpath('training_strategy_external.csv'),index=False)
     
     print("finished calculating the training strategy!!")
+#%%
+
+# result_path = output_path.joinpath("training_strategy_external.csv")
+# df = pd.read_csv(result_path)
+# #%%
+# df
 
 #%%
 
@@ -218,18 +230,4 @@ if __name__ == "__main__" :
     main()
 
 #%%
-
-from pathlib import Path
-import pandas as pd
-
-
-data_path = Path().cwd().joinpath('data/processed/4_results/training_strategy.csv')
-df = pd.read_csv(data_path)
-
-#%%
-df[df.type != 'trtr']
-
-
-
-
 
