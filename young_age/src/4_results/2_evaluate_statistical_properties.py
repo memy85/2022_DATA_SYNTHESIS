@@ -14,7 +14,7 @@ import numpy as np
 from tableone import TableOne
 from lifelines import KaplanMeierFitter
 from lifelines.utils import median_survival_times
-from matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 config = load_config()
 input_path = get_path("data/processed/2_produce_data/synthetic_decoded/")

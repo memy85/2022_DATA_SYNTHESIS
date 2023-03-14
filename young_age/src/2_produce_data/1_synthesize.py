@@ -20,13 +20,9 @@ from DataSynthesizer.lib.utils import read_json_file, display_bayesian_network
 
 #%%
 config = load_config()
-input_path = get_path('data/processed/preprocess_1')
-output_path = get_path('data/processed/2_produce_data')
-if not output_path.exists():
-    output_path.mkdir(parents=True)
 
 #%%
-def load_cohort_data(age):
+def load_cohort_data(input_path, age):
     """
     loads cohort data
     """
@@ -45,6 +41,7 @@ def extract_cohort_information(cohort_file_name):
 #%%
 
 def train_bayesian_network(input_data,
+                           output_path,
                            which_cohort,
                            threshold,
                            degree_of_bn,
@@ -69,7 +66,6 @@ def train_bayesian_network(input_data,
                                                             attribute_to_is_candidate_key={'PT_SBST_NO' : True},
                                                             seed = seed)
 
-    seed_output_path = output_path.joinpath(f'seed{seed}')
     description_file = output_path.joinpath(f'description_{which_cohort}_{epsilon_value}_{args.age}.json').as_posix()
     synthetic_data_path = output_path.joinpath(f'S0_{which_cohort}_{epsilon_value}_{args.age}.csv').as_posix()
 
@@ -82,103 +78,102 @@ def train_bayesian_network(input_data,
     generator.save_synthetic_data(synthetic_data_path)
 
     pass
-#%%
-def clean_unused_files(path) :
-    files = os.listdir(path)
-
-    pass
-
 
 #%%
 
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--age", default = 50, type = int)
+    parser.add_argument("--random_seed", default = 0, type=int)
     args = parser.parse_args()
     return args
 
 
 def main():
     args = argument_parse()
+    random_seed = args.random_seed 
+
     ## settings for bayesian network
+
+    input_path = get_path(f'data/processed/seed{random_seed}/1_preprocess')
+    output_path = get_path(f'data/processed/seed{random_seed}/2_produce_data')
+
+    if not output_path.exists():
+        output_path.mkdir(parents=True)
 
     threshold_value = 200 
     degree_of_bayesian_network = 2 # the maximum number of parents
     
-    cohort_files = load_cohort_data(args.age)
+    cohort_files = load_cohort_data(input_path, args.age)
     cohort_file_path = [input_path.joinpath(file).as_posix() for file in cohort_files]
 
     ## If you wish to do for epsilons untoggle below
 
     epsilons = config['epsilon'] 
-    seeds = [i for i in range(0,config['randomseed'])]
 
-    for seed in seeds :
-        output_path.joinpath(f'seed{seed}').mkdir(parents=True, exist_ok = True)
-        seed_output_path = output_path.joinpath(f'seed{seed}')
+    for epsilon in epsilons:
 
-        for epsilon in epsilons:
+        for df_path in cohort_file_path:
 
-            for df_path in cohort_file_path:
+            df = pd.read_csv(df_path)
 
-                df = pd.read_csv(df_path)
+            if df.shape[0] < 2 : 
+                cohort_file_path.remove(df_path)
+                continue
 
-                if df.shape[0] < 2 : 
-                    cohort_file_path.remove(df_path)
-                    continue
+            print("df path is {}".format(df_path))
 
-                print("df path is {}".format(df_path))
+            columns_list = df.columns.tolist()
+            cats = {cat : True for cat in columns_list} # treat all the columns as categorical data
+            del cats['PT_SBST_NO']
 
-                columns_list = df.columns.tolist()
-                cats = {cat : True for cat in columns_list} # treat all the columns as categorical data
-                del cats['PT_SBST_NO']
+            cohort_info = extract_cohort_information(df_path)
+            num_tuples_to_generate = df.shape[0] * config["multiply"] 
+            candidate_keys = {'PT_SBST_NO': True}
 
-                cohort_info = extract_cohort_information(df_path)
-                num_tuples_to_generate = df.shape[0] * config["multiply"] 
-                candidate_keys = {'PT_SBST_NO': True}
-
-                train_bayesian_network(input_data=df_path,
-                                       which_cohort= cohort_info,
-                                       threshold=threshold_value,
-                                       degree_of_bn=degree_of_bayesian_network,
-                                       categoricals=cats,
-                                       candidates=candidate_keys,
-                                       epsilon_value=epsilon,
-                                       num_generate=num_tuples_to_generate,
-                                       seed = seed,
-                                       args = args)
+            train_bayesian_network(input_data=df_path,
+                                   output_path=output_path,
+                                   which_cohort= cohort_info,
+                                   threshold=threshold_value,
+                                   degree_of_bn=degree_of_bayesian_network,
+                                   categoricals=cats,
+                                   candidates=candidate_keys,
+                                   epsilon_value=epsilon,
+                                   num_generate=num_tuples_to_generate,
+                                   seed = random_seed,
+                                   args = args)
 
         print("finished synthesizing for all epsilons and cohorts")
 
         cohort_null_columns_dict = pd.read_pickle(input_path.joinpath(f"null_columns_dict_{args.age}.pkl"))
 
     #%%
-        for epsilon in epsilons:
-            df_list = []
-            cohort_info_list = []
+    for epsilon in epsilons:
+        df_list = []
+        cohort_info_list = []
 
-            for df_path in cohort_file_path:
-                cohort = extract_cohort_information(df_path)
-                try : 
-                    syn_df =  pd.read_csv(seed_output_path.joinpath(f"S0_{cohort}_{epsilon}_{args.age}.csv"))     
-                except :
-                    print(f'cohort {cohort} does not exist')
-                    continue
+        for df_path in cohort_file_path:
+            cohort = extract_cohort_information(df_path)
+            try : 
+                syn_df =  pd.read_csv(output_path.joinpath(f"S0_{cohort}_{epsilon}_{args.age}.csv"))     
+            except :
+                print(f'cohort {cohort} does not exist')
+                continue
 
-                null_columns = cohort_null_columns_dict[cohort]
+            null_columns = cohort_null_columns_dict[cohort]
 
-                if len(null_columns) < 1 :
-                    pass
-                else :
-                    syn_df[null_columns] = np.NaN
-                df_list.append(syn_df)
+            if len(null_columns) < 1 :
+                pass
+            else :
+                syn_df[null_columns] = np.NaN
 
-            synthesized = pd.concat(df_list, axis=0)
-            synthesized = synthesized[["PT_SBST_NO","BSPT_SEX_CD","BSPT_IDGN_AGE","BSPT_FRST_DIAG_NM", "BSPT_STAG_CLSF_CD", "BSPT_STAG_VL","RLPS","RLPS DIFF", "DEAD", "DEAD_DIFF", "OVR_SURV", "BPTH", "OPRT","SGPT", "MLPT","IMPT","REGN"]]
+            df_list.append(syn_df)
 
-            
-            synthesized.to_csv(seed_output_path.joinpath(f"S0_mult_encoded_{epsilon}_{args.age}.csv"), index=False)
-            print("saved for epsilon {}".format(epsilon))
+        synthesized = pd.concat(df_list, axis=0)
+        synthesized = synthesized[["PT_SBST_NO","BSPT_SEX_CD","BSPT_IDGN_AGE","BSPT_FRST_DIAG_NM", "BSPT_STAG_CLSF_CD", "BSPT_STAG_VL","RLPS","RLPS DIFF", "DEAD", "DEAD_DIFF", "OVR_SURV", "BPTH", "OPRT","SGPT", "MLPT","IMPT","REGN"]]
+        
+        synthesized.to_csv(output_path.joinpath(f"S0_mult_encoded_{epsilon}_{args.age}.csv"), index=False)
+        print("saved for epsilon {}".format(epsilon))
 
 #%%
 if __name__ == "__main__" : 

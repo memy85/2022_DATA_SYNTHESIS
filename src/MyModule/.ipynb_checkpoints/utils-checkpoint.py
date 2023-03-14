@@ -30,7 +30,6 @@ def remove_invalid_values(data : DataFrame):
 
 def read_file(path : Path, file_name):
     extension = file_name.split('.')[1]
-    
     if extension == "xlsx":
         return pd.read_excel(path.joinpath(file_name))
     elif extension == 'csv' :

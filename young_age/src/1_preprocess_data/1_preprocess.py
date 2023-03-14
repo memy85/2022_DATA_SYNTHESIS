@@ -15,9 +15,6 @@ from src.MyModule.utils import *
 config = load_config()
 project_path = Path(config["project_path"])
 input_path = get_path("data/raw")
-output_path = get_path("data/processed/preprocess_1")
-if not output_path.exists() : 
-    output_path.mkdir(parents=True)
 
 import pandas as pd
 import numpy as np
@@ -28,16 +25,17 @@ import matplotlib.pyplot as plt
 
 from itertools import product
 
-random_seed = config['randomseed']
 
 #%%
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--age", type = int, default = 50)
+    parser.add_argument("--random_seed", type=int, default = 0)
     args = parser.parse_args()
     return args
 
 
+#%%
 def create_cohort(data, cohort_criteria):
     '''
     data : original data
@@ -48,7 +46,8 @@ def create_cohort(data, cohort_criteria):
     cohort_info = [(combi, cohort) for combi, cohort in data.groupby(cohort_criteria)]
     return cohort_info     
 
-def remove_previous_cohorts(age) :
+#%%
+def remove_previous_cohorts(output_path, age) :
     files = os.listdir(output_path.as_posix())
     files = list(filter(lambda x : 'cohort' in x, files))
     files = list(filter(lambda x : str(age) in x, files))
@@ -62,10 +61,25 @@ def remove_previous_cohorts(age) :
 #%%
 def main():
     args = argument_parse()
+    age = args.age
+    random_seed =  args.random_seed
+    #%%
+    # age = 50
+    # random_seed = 0
+
+
+    seed_path = get_path(f"data/processed/seed{random_seed}")
+    output_path = seed_path.joinpath('1_preprocess')
+
+    if not seed_path.exists() : 
+        seed_path.mkdir(parents=True)
     
+    if not output_path.exists() : 
+        output_path.mkdir(parents=True)
+
     data = pd. read_excel(project_path.joinpath('data/raw/D0_Handmade_ver1.1.xlsx'))
     #%% filter patients under age
-    data = data[data.BSPT_IDGN_AGE <= args.age].copy()
+    data = data[data.BSPT_IDGN_AGE <= age].copy()
     data = data.replace('x',999)
     data = data.replace('Not Data', np.NaN)
 
@@ -82,7 +96,7 @@ def main():
     cond2 = data['SGPT_PATL_T_STAG_VL'].isnull()==True
     data = data.drop(data[cond1&cond2].index)
 
-    data.to_pickle(output_path.joinpath(f"original_{args.age}.pkl"))
+    data.to_pickle(output_path.joinpath(f"original_{age}.pkl"))
     data = data.drop(['OVRL_SRVL_DTRN_DCNT','RLPS_DTRN_DCNT'],axis=1)
 
     # whole data length : 1501 -> after apply exclude criteria : 1253
@@ -113,6 +127,7 @@ def main():
 
     col = col+regn_col
     bind.columns = col
+
 
     #%% Here chaning the regimen data
     for i in range(1,9):
@@ -155,10 +170,10 @@ def main():
             bind[col] = trans
             
     #%% save bind_columns information and encodings
-    with open(output_path.joinpath(f"label_dict_{args.age}.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"label_dict_{age}.pkl"), 'wb') as f:
         pickle.dump(encode_dict, f)
         
-    with open(output_path.joinpath(f"bind_columns_{args.age}.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"bind_columns_{age}.pkl"), 'wb') as f:
         pickle.dump(bind.columns.to_list(), f)
 
     #%%
@@ -209,6 +224,7 @@ def main():
         results.append(a)
         
     # results captivates values that are split    
+
     #%%
     # make the results into a one dataframe
     whole_encoded_df = results[0]
@@ -218,14 +234,14 @@ def main():
     #%%
     whole_encoded_df = whole_encoded_df + 'r'
 
-    pd.concat([standalone, whole_encoded_df], axis=1).to_pickle(output_path.joinpath(f"encoded_D0_{args.age}.pkl"))
+    pd.concat([standalone, whole_encoded_df], axis=1).to_pickle(output_path.joinpath(f"encoded_D0_{age}.pkl"))
 
     #%%
     # unmodified : Now we make the D0 that is the same format as the input for bayesian
     # For the columns in uD0, we change the variables into strings
 
     unmodified_D0 = pd.concat([standalone,bind], axis=1)
-    # unmodified_D0.to_csv(output_path.joinpath(f'encoded_D0_{args.age}.csv'),index_label=False)
+    unmodified_D0.to_csv(output_path.joinpath(f'encoded_D0_{age}.csv'),index_label=False)
 
     encoders = []
     for col in unmodified_D0.columns:
@@ -240,31 +256,32 @@ def main():
             unmodified_D0[col] = trans
            
     #%% save encoder
-    with open(output_path.joinpath(f"LabelEncoder_{args.age}.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"LabelEncoder_{age}.pkl"), 'wb') as f:
         pickle.dump(encoders, f)
 
     # save unmodified
-    unmodified_D0.to_pickle(output_path.joinpath(f"unmodified_D0_{args.age}.pkl"))
+    unmodified_D0.to_pickle(output_path.joinpath(f"unmodified_D0_{age}.pkl"))
 
     #%% split train and valid      
 
-    encoded = pd.read_csv(output_path.joinpath(f'encoded_D0_{args.age}.csv'))
+    encoded = pd.read_pickle(output_path.joinpath(f'encoded_D0_{age}.pkl'))
     sampled = encoded.sample(frac= 0.8, random_state = random_seed)
     train_idx = sampled.index
 
-    with open(output_path.joinpath(f"train_idx_{args.age}.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"train_idx_{age}.pkl"), 'wb') as f:
         pickle.dump(train_idx, f)
 
     #%% save with cohort information
   
-    sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{args.age}.csv'), index=False)
+    sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{age}.csv'), index=False)
 
     cohort_info = create_cohort(sampled, config["cohort_criteria"]) 
     
     print("The total cohort combination size is {}".format(len(cohort_info)))
 
-    remove_previous_cohorts(args.age)
+    remove_previous_cohorts(output_path, age)
 
+#%%
     cohort_info_list = []
     cohort_null_columns_dict = {}
     for combination, cohort in cohort_info:
@@ -277,16 +294,17 @@ def main():
         else :
             cohort_null_columns = []
 
-        cohort.to_csv(output_path.joinpath("cohort_{}_{}.csv".format(combination, args.age)), index=False)
+        cohort.to_csv(output_path.joinpath("cohort_{}_{}.csv".format(combination, age)), index=False)
         cohort_info_list.append(combination)
         cohort_null_columns_dict[combination] = cohort_null_columns
 
     # save cohort info
-    with open(output_path.joinpath(f"coho_info_{args.age}.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"coho_info_{age}.pkl"), 'wb') as f:
         pickle.dump(cohort_info_list, f)
 
-    with open(output_path.joinpath(f"null_columns_dict_{args.age}.pkl"), 'wb') as f:
+    with open(output_path.joinpath(f"null_columns_dict_{age}.pkl"), 'wb') as f:
         pickle.dump(cohort_null_columns_dict, f)
+#%%
 
 def check_null_column(data):
     """

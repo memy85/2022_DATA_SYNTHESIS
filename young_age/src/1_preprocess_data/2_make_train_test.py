@@ -8,8 +8,8 @@ from pathlib import Path
 import os, sys
 import argparse
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -18,18 +18,12 @@ from src.MyModule.utils import *
 #%%
 config = load_config()
 project_path = Path(config["project_path"])
-input_path = get_path("data/processed/preprocess_1")
-output_path = get_path("data/processed/preprocess_1")
-
-if not output_path.exists() : 
-    output_path.mkdir(parents=True)
 
 import pandas as pd
 import numpy as np
 import random
 import pickle
 from sklearn.preprocessing import LabelEncoder
-
 
 def restore_to_learnable(data, original_data):
     """
@@ -57,6 +51,7 @@ def restore_to_learnable(data, original_data):
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--age", type = int, default = 50)
+    parser.add_argument("--random_seed", type=int, default = 0)
     args = parser.parse_args()
     return args
 
@@ -65,6 +60,13 @@ def argument_parse():
 def main():
     args = argument_parse() 
     age = args.age
+    random_seed = args.random_seed
+
+    input_path = get_path(f"data/processed/seed{random_seed}/1_preprocess")
+    output_path = get_path(f"data/processed/seed{random_seed}/1_preprocess")
+
+    if not output_path.exists() : 
+        output_path.mkdir(parents=True)
 
     original = pd.read_pickle(input_path.joinpath(f"original_{age}.pkl"))
     unmodified_D0 = pd.read_pickle(input_path.joinpath(f"unmodified_D0_{age}.pkl"))

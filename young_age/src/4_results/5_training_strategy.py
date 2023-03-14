@@ -10,7 +10,8 @@ os.sys.path.append(project_dir.as_posix())
 
 data_dir = project_dir.joinpath('data')
 org_dir = data_dir.joinpath('processed/preprocess_1')
-syn_dir = data_dir.joinpath('processed/2_produce_data/synthetic_decoded')
+# syn_dir = data_dir.joinpath('processed/2_produce_data/synthetic_decoded')
+syn_dir = data_dir.joinpath('processed/no_bind/decoded')
 output_path = project_dir.joinpath("data/processed/4_results")
 figure_path = project_dir.joinpath("figures")
 
@@ -26,7 +27,6 @@ config = load_config()
 
 #%%
 
-# syn = pd.read_csv(syn_dir.joinpath('Synthetic_data_epsilon10000_50.csv'),index_col = 0)
 
 def argument_parse():
     parser = argparse.ArgumentParser()
@@ -41,8 +41,8 @@ def process_synthetic(synthetic) :
     syn_x = synthetic.drop(['DEAD'],axis = 1)
     syn_y = synthetic["DEAD"]
 
-    rus = RandomUnderSampler(sampling_strategy = 0.5, random_state = 0)
-    syn_x, syn_y = rus.fit_resample(syn_x, syn_y)
+    # rus = RandomUnderSampler(sampling_strategy = 0.5, random_state = 0)
+    # syn_x, syn_y = rus.fit_resample(syn_x, syn_y)
     return (syn_x, syn_y)
 
 
@@ -97,6 +97,7 @@ def get_results(original, synthetic):
 
     model_arr = [tstr_models,trts_models,tsts_models]
     return model_arr
+
 
 def test_model(model_list, type, epsilon, test) :
     test_x, test_y = test
@@ -161,7 +162,8 @@ def main() :
             all_test_result.extend(result)
 
     test_result = pd.DataFrame(all_test_result)
-    test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}.csv'),index=False)
+    # test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}.csv'),index=False)
+    test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}_no_bind.csv'),index=False)
     
     print("finished calculating the training strategy!!")
 
@@ -218,18 +220,3 @@ if __name__ == "__main__" :
     main()
 
 #%%
-
-from pathlib import Path
-import pandas as pd
-
-
-data_path = Path().cwd().joinpath('data/processed/4_results/training_strategy.csv')
-df = pd.read_csv(data_path)
-
-#%%
-df[df.type != 'trtr']
-
-
-
-
-

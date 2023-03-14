@@ -14,8 +14,8 @@ from pathlib import Path
 import argparse
 from sklearn.model_selection import train_test_split
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path().cwd()
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path().cwd()
 
 os.sys.path.append(project_path.as_posix())
 
@@ -55,7 +55,8 @@ def main() :
     args = argument_parse()
     age = args.age
 
-    input_path = get_path("data/processed/2_produce_data/synthetic_decoded")
+    # input_path = get_path("data/processed/2_produce_data/synthetic_decoded")
+    input_path = get_path("data/processed/no_bind/decoded")
 
     synthetic_path = input_path.joinpath(f"Synthetic_data_epsilon10000_{age}.csv")
 
@@ -273,4 +274,3 @@ if __name__ == "__main__" :
 ## plt.show()
 
 
-##%%
