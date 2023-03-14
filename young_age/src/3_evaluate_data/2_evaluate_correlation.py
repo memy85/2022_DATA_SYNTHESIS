@@ -3,8 +3,8 @@
 from pathlib import Path
 import os, sys
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path().cwd()
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path().cwd()
 os.sys.path.append(project_path.as_posix())
 #%%
 from src.MyModule.utils import *
@@ -185,8 +185,6 @@ def calculate_correlation_diff_for_all_variables_no_bind() :
     original = pd.read_csv(no_bind_path.joinpath('encoded_D0_to_syn_50.csv'))
     original = original.drop(columns = 'PT_SBST_NO')
 
-    # synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{args.age}.csv'))
-    #                        for epsilon in config['epsilon']]
     synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{50}.csv'))
                            for epsilon in config['epsilon']]
 
@@ -303,8 +301,8 @@ def plot_correlation(processor, epsilon, age) :
 if __name__ == "__main__" :
 
     # main() 
-    # calculate_correlation_diff_for_all_variables()
-    calculate_correlation_diff_for_all_variables_no_bind()
+    calculate_correlation_diff_for_all_variables()
+    # calculate_correlation_diff_for_all_variables_no_bind()
 
     
 #%%

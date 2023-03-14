@@ -1,21 +1,26 @@
+# data and logs
 data
 log
-young_age/data
+
+CTGAN
 
 # package files
 *.zip
 *.gz
 *.tar.gz
-*.jukit
-*.swp
+*.jukit *.swp
 *.csv
 # config files
+config
 *.yaml
 
 # research notes
 research_notes.txt
 
+# young age
 young_age/synthcity-main
 young_age/src/2_produce_data/3_synthcity.py
 young_age/figures
 young_age/DataSynthesizer
+young_age/config
+young_age/data

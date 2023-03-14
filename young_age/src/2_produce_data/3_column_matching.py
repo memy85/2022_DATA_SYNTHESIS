@@ -16,21 +16,13 @@ config = load_config()
 project_path = get_path('')
 data_dir = project_path.joinpath('data')
 
-#%%
-
-org_dir = data_dir.joinpath('processed/preprocess_1')
-# syn_dir = data_dir.joinpath('processed/2_produce_data/synthetic_restore')
-syn_dir = data_dir.joinpath('processed/no_bind/restored/seed0/synthetic_restore')
-# output_path = data_dir.joinpath('processed/3_evaluate_data')
-output_path = data_dir.joinpath('processed/no_bind/matching')
-if not output_path.exists() : 
-    output_path.mkdir(parents = True)
 
 #%%
 
 def parse_argument():
     parser = argparse.ArgumentParser()
     parser.add_argument('--age', default = 50, type = int)
+    parser.add_argument('--random_seed', default = 0, type = int)
     args = parser.parse_args()
     return args
 
@@ -48,11 +40,22 @@ def count_adjuvant(data) :
 if __name__ == "__main__" :
 
     args = parse_argument()
+    age = args.age
+    random_seed = args.random_seed
+
+    org_dir = data_dir.joinpath(f'processed/seed{random_seed}/1_preprocess')
+    syn_dir = data_dir.joinpath(f'processed/seed{random_seed}/2_produce_data/synthetic_restore')
+# syn_dir = data_dir.joinpath('processed/no_bind/restored/seed0/synthetic_restore')
+    output_path = data_dir.joinpath(f'processed/seed{random_seed}/3_evaluate_data')
+# output_path = data_dir.joinpath('processed/no_bind/matching')
+    if not output_path.exists() : 
+        output_path.mkdir(parents = True)
+
 #%%
     sel_col = ['BSPT_SEX_CD','BSPT_IDGN_AGE','BSPT_FRST_DIAG_NM','BSPT_STAG_VL','RLPS','DEAD','BPTH_SITE_CONT','BPTH_CELL_DIFF_NM','OPRT_CLCN_OPRT_KIND_NM']
 
-    # org = pd.read_pickle(org_dir.joinpath(f'original_{args.age}.pkl'))
-    org = pd.read_csv('/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age/data/processed/no_bind/encoded_D0_to_syn_50.csv')
+    org = pd.read_pickle(org_dir.joinpath(f'original_{args.age}.pkl'))
+    # org = pd.read_csv('/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age/data/processed/no_bind/encoded_D0_to_syn_50.csv')
     stdl_org = org.loc[:,sel_col + ['OVR_SURV']]
 
     binded_org = org[org.columns[list(org.columns).index('SGPT_PATL_STAG_VL'):]]

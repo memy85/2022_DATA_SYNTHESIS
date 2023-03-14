@@ -1,3 +1,4 @@
+#%%
 from MyModule.configuration import Configurator
 
 from pathlib import Path
@@ -43,7 +44,7 @@ class Data:
             self.data[col] = pd.to_datetime(self.data[col], format='%Y%m%d')
     
     def return_synthesizable(self):
-        NotImplemented
+        NotImplementedError
 
     def return_data_with_required_variables(self):
         '''

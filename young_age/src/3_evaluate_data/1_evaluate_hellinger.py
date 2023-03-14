@@ -13,10 +13,6 @@ import pandas as pd
 import numpy as np
 
 config = load_config()
-# input_path = get_path("data/processed/2_produce_data")
-input_path = get_path("data/processed/no_bind")
-output_path = get_path("data/processed/3_evaluate_data/")
-figure_path = get_path("figures/")
 
 
 #%%
@@ -201,12 +197,12 @@ def decode(whole_encoded_df, tables, bind_data_columns):
     
     return restored
 
-def prepare_original_data(age) :
+def prepare_original_data(seed, age) :
 
-    original_data_path = get_path(f"data/processed/preprocess_1/encoded_D0_{age}.csv")
+    original_data_path = get_path(f"data/processed/seed{seed}/1_preprocess/encoded_D0_{age}.csv")
     data = pd.read_csv(original_data_path)
 
-    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{seed}/1_preprocess/bind_columns_{age}.pkl"))
 
     tables= []
     for col in bind_columns:
@@ -231,12 +227,12 @@ def prepare_original_data(age) :
 
     return data
 
-def prepare_synthetic_data(age) :
+def prepare_synthetic_data(seed, age) :
 
     epsilons = config['epsilon']
     synthetic_data_list = []
 
-    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{seed}/1_preprocess/bind_columns_{age}.pkl"))
 
     tables= []
     for col in bind_columns:
@@ -276,7 +272,7 @@ def calculate_hellinger_unbinded() :
     #                        for epsilon in config['epsilon']]
     synthetic_data_list = [pd.read_csv(no_bind_path.joinpath(f'seed0/S0_mult_encoded_{epsilon}_{50}.csv'))
                            for epsilon in config['epsilon']]
-#%%
+
     def drop_column(data, columns):
         data = data.drop(columns = columns)
         return data
@@ -318,16 +314,21 @@ def calculate_hellinger_unbinded() :
     hd_info.to_csv(output_path.joinpath('hd_info_all_columns_no_bind.csv'), index=False)
     print("successfully ended calculatign hellinger distance for all variables")
     return 0
-#%%
 
 #%%
 
 
 def calculate_hellinger_for_all_variables() :
     args = argument_parser()
+    random_seed = args.random_seed
+
+    input_path = get_path(f"data/processed/seed{random_seed}/2_produce_data")
+# input_path = get_path("data/processed/no_bind")
+    output_path = get_path(f"data/processed/seed{random_seed}/3_evaluate_data")
+    figure_path = get_path("figures/")
     
-    synthetic_data_list = prepare_synthetic_data(args.age)
-    original = prepare_original_data(args.age)
+    synthetic_data_list = prepare_synthetic_data(random_seed, args.age)
+    original = prepare_original_data(random_seed, args.age)
     columns = original.columns.tolist()
 
     hd_list = []
@@ -364,13 +365,20 @@ def calculate_hellinger_for_all_variables() :
 def argument_parser() :
     parser = argparse.ArgumentParser()
     parser.add_argument('--age', default = 50, type = int)
+    parser.add_argument('--random_seed', default=0, type=int)
     args = parser.parse_args()
     return args
 
 def main() :
     args = argument_parser()
-    columns = original.columns.tolist()
+    random_seed = args.random_seed
     age = args.age
+
+    input_path = get_path(f"data/processed/seed{random_seed}/2_produce_data")
+# input_path = get_path("data/processed/no_bind")
+    output_path = get_path(f"data/processed/seed{random_seed}/3_evaluate_data")
+    figure_path = get_path("figures/")
+    columns = original.columns.tolist()
 
     cols = [
         "BSPT_IDGN_AGE",
@@ -396,12 +404,12 @@ def main() :
         "OVRL_SURV" : np.arange(0,365*10,1000),
     }
 
-    original_path = get_path(f'data/processed/3_evaluate_data/matched_org_{age}.pkl')
+    original_path = get_path(f'data/processed/seed{random_seed}/3_evaluate_data/matched_org_{age}.pkl')
 
 
     synthetic_data_path_list = []
     for epsilon in config['epsilon'] : 
-        synthetic_path = get_path(f'data/processed/3_evaluate_data/matched_syn_{epsilon}_{age}.pkl')
+        synthetic_path = get_path(f'data/processed/seed{random_seed}/3_evaluate_data/matched_syn_{epsilon}_{age}.pkl')
         synthetic_data_path_list.append(synthetic_path)
 
     synthetic_data_list = list(map(lambda x : load_pickle(x, cols), synthetic_data_path_list))
@@ -448,7 +456,6 @@ def main() :
 #%%
 if __name__ == "__main__" :
     # main()
-    # calculate_hellinger_for_all_variables()
-    calculate_hellinger_unbinded()
+    calculate_hellinger_for_all_variables()
+    # calculate_hellinger_unbinded()
 
-#%%

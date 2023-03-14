@@ -4,16 +4,14 @@ import os
 from pathlib import Path
 from imblearn.under_sampling import RandomUnderSampler
 
+project_path = Path(__file__).absolute().parents[2]
+data_dir = project_path.joinpath('data')
 
 
-
-cur_file = Path(os.getcwd())
-working_dir = cur_file.parent
-parent_dir = working_dir.parent
 data_dir = parent_dir.joinpath('data')
 
 org_dir = data_dir.joinpath('processed/preprocess_1')
-syn_dir = data_dir.joinpath('processed/decoded')
+syn_dir = data_dir.joinpath('processed/no_bind/decoded')
 
 print("working directory : " + working_dir)
 
