@@ -4,8 +4,8 @@ from pathlib import Path
 import os, sys
 import argparse
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -64,9 +64,8 @@ def main():
     age = args.age
     random_seed =  args.random_seed
     #%%
-    # age = 50
-    # random_seed = 0
-
+    age = 50
+    random_seed = 1
 
     seed_path = get_path(f"data/processed/seed{random_seed}")
     output_path = seed_path.joinpath('1_preprocess')
@@ -127,7 +126,6 @@ def main():
 
     col = col+regn_col
     bind.columns = col
-
 
     #%% Here chaning the regimen data
     for i in range(1,9):
