@@ -118,6 +118,9 @@ def main():
             df = pd.read_csv(df_path)
 
             if df.shape[0] < 2 : 
+                '''
+                If there is only one case in the cohort, remove it from the synthesizing source
+                '''
                 cohort_file_path.remove(df_path)
                 continue
 

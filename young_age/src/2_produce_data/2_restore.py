@@ -9,8 +9,8 @@ import random
 import argparse
 from sklearn.preprocessing import LabelEncoder
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path().cwd()
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path().cwd()
 
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
@@ -91,6 +91,11 @@ def argument_parse():
 
 def main():
     args = argument_parse()
+    random_seed = args.random_seed
+
+#%%
+    random_seed = 1
+    age = 50
     raw_path = get_path("data/raw/D0_Handmade_ver1.1.xlsx")
 
     project_path = Path(config["project_path"])
@@ -105,7 +110,8 @@ def main():
     data = pd.read_excel(raw_path)
 
     #%% read bind colums
-    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{args.age}.pkl"))
+    # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{args.age}.pkl"))
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{50}.pkl"))
     # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{50}.pkl"))
 
     #%%
@@ -116,17 +122,20 @@ def main():
     epsilons = config['epsilon']
     for epsilon in epsilons:
 
-        syn = pd.read_csv(seed_input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+        #%%
+        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{age}.csv'))
         # syn = pd.read_csv(seed_input_path.joinpath(f'S0_mult_encoded_{epsilon}_{50}.csv'))
 
         try:
             syn = syn.drop('Unnamed: 0', axis=1)
         except:
             pass
+       
+       #%%
         syn = syn.astype(str)
         # need to comment it if you do it with bind columns
         # syn = syn.replace('nan', 999)
-#%%
+
         # uncomment if the columns are binded!!
         for col in syn.iloc[:,11:]:
             syn[col] =syn[col].str.replace('r','')
@@ -135,9 +144,9 @@ def main():
         decoded.columns = bind_columns
 
         syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
-#%%
         syn = syn.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
          
+        #%%
         # # continous restore    
         syn['BSPT_IDGN_AGE'] = syn['BSPT_IDGN_AGE'].astype(int)
         ages=[]
@@ -186,11 +195,11 @@ def main():
         ml_data = ml_data.replace(999,np.NaN)
         ml_data = ml_data.replace('999',np.NaN)
 
-        if not seed_output_path.joinpath(f'synthetic_decoded').exists():
-            seed_output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
+        if not output_path.joinpath(f'synthetic_decoded').exists():
+            output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
 #%%
                     
-        ml_data.to_csv(seed_output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
+        ml_data.to_csv(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
 
 #%%
 
@@ -258,7 +267,7 @@ def main():
             except:
                 pass
 
-        save_path = seed_output_path.joinpath("synthetic_restore")
+        save_path = output_path.joinpath("synthetic_restore")
         if not save_path.exists():
             save_path.mkdir(parents=True)
 

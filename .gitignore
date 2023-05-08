@@ -24,3 +24,9 @@ young_age/figures
 young_age/DataSynthesizer
 young_age/config
 young_age/data
+
+
+# young age privacy
+young_age_privacy/data
+young_age_privacy/DataSynthesizer
+young_age_privacy/config

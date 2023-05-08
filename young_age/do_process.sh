@@ -3,8 +3,6 @@
 
 # This file executes the young age cancer project if you have the appropriate data
 
-
-
 function do_process {
 
     process_number=$1
@@ -42,6 +40,7 @@ function do_process {
 
 # 100 times repeated experiment
 # if the seed = 1 then only do the process once
+
 
 SET=$(seq 1 $3)
 

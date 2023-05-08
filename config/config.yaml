@@ -6,7 +6,7 @@ path_config :
   output_path : /home/wonseok/projects/2022_DATA_SYNTHESIS/data/processed
 
 random_seed : 42
-epsilon : [0.1, 1, 10, 100, 1000]
+epsilon : [0.1, 1, 10, 100, 1000, 10000]
 
 bayesian_config : 
   degree_of_network : 2
@@ -161,24 +161,29 @@ lung_config :
     LUNG_DEAD_NFRM:
       DEAD_YMD: datetime64[ns]
       PT_SBST_NO: object
+
     LUNG_DG_RCNF:
       PT_SBST_NO: object
       RLPS_DIAG_YMD: datetime64[ns]
+
     LUNG_EX_DIAG:
       CEXM_NM: object
       CEXM_RSLT_CONT: float32
       CEXM_YMD: datetime64[ns]
       PT_SBST_NO: object
+        
     LUNG_OPRT_NFRM:
       OPRT_CLCN_OPRT_KIND_NM: object
       OPRT_CURA_RSCT_NM: object
       OPRT_YMD: datetime64[ns]
       PT_SBST_NO: object
+
     LUNG_PTH_BPSY:
       BPTH_ACPT_YMD: datetime64[ns]
       BPTH_BPSY_RSLT_CONT: object
       BPTH_CELL_DIFF_NM: object
       PT_SBST_NO: object
+
     CLRC_PTH_MLCR:
       MLPT_ACPT_YMD: datetime64[ns]
       MLPT_BRME_RSLT_NM: object
@@ -187,6 +192,7 @@ lung_config :
       MLPT_MSIE_RSLT_NM: object
       MLPT_NREX_RSLT_NM: object
       PT_SBST_NO: object
+
     CLRC_PTH_MNTY:
       IMPT_ACPT_YMD: datetime64[ns]
       IMPT_HM1E_RSLT_NM: object
@@ -194,6 +200,7 @@ lung_config :
       IMPT_HS2E_RSLT_NM: object
       IMPT_HS6E_RSLT_NM: object
       PT_SBST_NO: object
+
     CLRC_PTH_SRGC:
       PT_SBST_NO: object
       SGPT_ACPT_YMD: datetime64[ns]
@@ -211,24 +218,35 @@ lung_config :
       SGPT_TUMR_BUDD_NM: object
       SGPT_VNIN_NM: object
       SGPT_ANIN_NM: object
-    CLRC_PT_BSNF:
-      BSPT_FRST_DIAG_CD: object
-      BSPT_FRST_DIAG_YMD: datetime64[ns]
-      BSPT_IDGN_AGE: float32
-      BSPT_M_STAG_VL: object
-      BSPT_N_STAG_VL: object
+
+    LUNG_PT_BSNF:
+      PT_SBST_NO: object
       BSPT_SEX_CD: object
+      BSPT_BRYM : datetime64[ns]
+      BSPT_FRST_DIAG_YMD: datetime64[ns]
+      BSPT_FRST_DIAG_CD: object
+      BSPT_FRST_DIAG_NM : object
+      BSPT_IDGN_AGE: float32
+      BSPT_FRST_OPRT_YMD : datetime64[ns]
+      BSPT_FRST_ANCN_TRTM_YMD : datetime64[ns]
+      BSPT_FRST_RDT_STRT_YMD : datetime64[ns]
+      BSPT_DEAD_YMD : datetime64[ns]
+      CENTER_LAST_VST_YMD : datetime64[ns]
+      OVRL_SRVL_DTRN_DCNT : float32
       BSPT_STAG_VL: object
       BSPT_T_STAG_VL: object
-      PT_SBST_NO: object
-    CLRC_TRTM_CASB:
+      BSPT_N_STAG_VL: object
+      BSPT_M_STAG_VL: object
+
+    LUNG_TRTM_CASB:
       CSTR_END_YMD: datetime64[ns]
       CSTR_NT: float32
       CSTR_PRPS_NM: object
       CSTR_REGN_NM: object
       CSTR_STRT_YMD: datetime64[ns]
       PT_SBST_NO: object
-    CLRC_TRTM_RD:
+
+    LUNG_TRTM_RD:
       PT_SBST_NO: object
       RDT_STRT_YMD: datetime64[ns]
   
