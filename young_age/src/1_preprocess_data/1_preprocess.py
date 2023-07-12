@@ -4,8 +4,8 @@ from pathlib import Path
 import os, sys
 import argparse
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -33,6 +33,14 @@ def argument_parse():
     parser.add_argument("--random_seed", type=int, default = 0)
     args = parser.parse_args()
     return args
+
+
+def transform_to_date(dateStringColumn):
+    
+    try :
+        return pd.to_datetime(dateStringColumn, format="%Y%m%d")
+    except : 
+        raise ValueError
 
 
 #%%
@@ -64,8 +72,8 @@ def main():
     age = args.age
     random_seed =  args.random_seed
     #%%
-    age = 50
-    random_seed = 1
+    # age = 50
+    # random_seed = 0
 
     seed_path = get_path(f"data/processed/seed{random_seed}")
     output_path = seed_path.joinpath('1_preprocess')
@@ -76,11 +84,31 @@ def main():
     if not output_path.exists() : 
         output_path.mkdir(parents=True)
 
-    data = pd. read_excel(project_path.joinpath('data/raw/D0_Handmade_ver1.1.xlsx'))
+    data = pd.read_csv(project_path.joinpath('data/raw/D0_Handmade_ver2.csv'))
+    # past = pd.read_excel(project_path.joinpath('data/raw/D0_Handmade_ver1.1.xlsx'))
+
+
     #%% filter patients under age
     data = data[data.BSPT_IDGN_AGE <= age].copy()
     data = data.replace('x',999)
     data = data.replace('Not Data', np.NaN)
+
+    #%% change date columns to date types
+
+    datecolumns = data.filter(like= "YMD").columns.tolist()
+
+    for col in datecolumns : 
+    
+        try : 
+            data.loc[:, col] = pd.to_datetime(data[col], format="%Y%m%d")
+
+        except : 
+            try : 
+                data.loc[:, col] = pd.to_datetime(data[col], format="%Y-%m-%d")
+
+            except :
+                raise ValueError(f"in columns {col}")
+    #%%
 
     # exclude criteria
     # overall observation day is under 30days
@@ -90,12 +118,15 @@ def main():
     cond1 = data['BSPT_STAG_VL'] != 999
     data = data[cond1].dropna(subset=['BSPT_STAG_VL'])
 
+    #%%
     # Surgical T Stage value is missing, but have operation report
     cond1 = data['OPRT_YMD'].isnull()==True
     cond2 = data['SGPT_PATL_T_STAG_VL'].isnull()==True
     data = data.drop(data[cond1&cond2].index)
 
     data.to_pickle(output_path.joinpath(f"original_{age}.pkl"))
+
+    #%%
     data = data.drop(['OVRL_SRVL_DTRN_DCNT','RLPS_DTRN_DCNT'],axis=1)
 
     # whole data length : 1501 -> after apply exclude criteria : 1253
@@ -143,7 +174,7 @@ def main():
         #bind.drop(f'REGN_TRTM_CASB_CSTR_YMD2_{i}',axis=1,inplace = True)
 
     #%%
-    # changning all the data into a encoded form
+    # changing all the data into a encoded form
     # encode_dic == label_dict, they are the same
     # label_dict is for binded columsn
     encoders = []
@@ -238,8 +269,8 @@ def main():
     # unmodified : Now we make the D0 that is the same format as the input for bayesian
     # For the columns in uD0, we change the variables into strings
 
-    unmodified_D0 = pd.concat([standalone,bind], axis=1)
-    unmodified_D0.to_csv(output_path.joinpath(f'encoded_D0_{age}.csv'),index_label=False)
+    unmodified_D0 = pd.concat([standalone, bind], axis=1)
+    unmodified_D0.to_csv(output_path.joinpath(f'encoded_D0_{age}.csv'), index_label=False)
 
     encoders = []
     for col in unmodified_D0.columns:
@@ -249,7 +280,7 @@ def main():
             unmodified_D0[col].astype(str)
             encoder = LabelEncoder()
             encoder.fit(unmodified_D0[col])
-            encoders.append(encoder)
+            encoders.append((col, encoder)) # save as tuple
             trans = encoder.transform(unmodified_D0[col])
             unmodified_D0[col] = trans
            

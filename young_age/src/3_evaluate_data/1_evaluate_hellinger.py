@@ -14,7 +14,6 @@ import numpy as np
 
 config = load_config()
 
-
 #%%
 class Variable:
 
@@ -136,6 +135,7 @@ def hellinger_distance(var1 : Variable,
 
         return np.round((1/np.sqrt(2))*np.sqrt(df['distance'].sum()), 3)
 
+
 #%% calculate hellinger distance between variables
 
 #%% load original data and synthetic data
@@ -183,22 +183,13 @@ def decode(whole_encoded_df, tables, bind_data_columns):
                     a=''
             
             temp1.append(temp2)
+
         sep_df = pd.DataFrame(temp1)
-        restored = pd.concat([restored,sep_df],axis=1)
+        restored = pd.concat([restored, sep_df],axis=1)
         
-    cols = []
-    for head in tables:
-        # originally bind.filter(like=head)
-        columns = list(filter(lambda x : head in x, bind_data_columns))
-        for col in columns:
-            cols.append(col)
-
-    #restored.columns = cols
-    
     return restored
-
+#%%
 def prepare_original_data(seed, age) :
-
     original_data_path = get_path(f"data/processed/seed{seed}/1_preprocess/encoded_D0_{age}.csv")
     data = pd.read_csv(original_data_path)
 
@@ -206,22 +197,25 @@ def prepare_original_data(seed, age) :
 
     tables= []
     for col in bind_columns:
-            tables.append('_'.join(col.split('_')[0:1]))
+        tables.append('_'.join(col.split('_')[0:1]))
+        
     try:
-        data = data.drop('Unnamed: 0', axis=1)
+        data = data.drop(columns = 'Unnamed: 0')
+
     except:
         pass
+
     data = data.astype(str)
-
-    for col in data.iloc[:,11:]:
-        data[col] = data[col].str.replace('r','')
-        
-    decoded = decode(data.iloc[:,11:], tables, bind_columns)
-    decoded.columns = bind_columns
-
+#%%
+    # for col in data.iloc[:,11:]:
+    #     data[col] = data[col].str.replace('r','')
+    #     
+    # decoded = decode(data.iloc[:,11:], tables, bind_columns)
+    # decoded.columns = bind_columns
+#%%
     data.reset_index(drop=True, inplace=True)
     
-    data = pd.concat([data.iloc[:,:11],decoded],axis=1)
+    # data = pd.concat([data.iloc[:,:11],decoded],axis=1)
     data = data.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
     data = data.drop(columns = "PT_SBST_NO")
 
@@ -233,6 +227,7 @@ def prepare_synthetic_data(seed, age) :
     synthetic_data_list = []
 
     bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{seed}/1_preprocess/bind_columns_{age}.pkl"))
+    input_path = get_path(f"data/processed/seed{seed}/2_produce_data")
 
     tables= []
     for col in bind_columns:
@@ -317,8 +312,10 @@ def calculate_hellinger_unbinded() :
 
 #%%
 
-
 def calculate_hellinger_for_all_variables() :
+    '''
+    calcualte the hellinger distance for all the variables
+    '''
     args = argument_parser()
     random_seed = args.random_seed
 

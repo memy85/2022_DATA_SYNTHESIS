@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 import argparse
 
-projectPath = Path().cwd()
-# projectPath = Path(__file__).parents[2]
+# projectPath = Path().cwd()
+projectPath = Path(__file__).parents[2]
 print(projectPath)
 dataPath = projectPath.joinpath("data/processed/")
 

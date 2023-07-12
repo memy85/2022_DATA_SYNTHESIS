@@ -1,18 +1,14 @@
 #%%
+
 import os
 from pathlib import Path
 
-project_dir = Path(os.getcwd())
-# cur_file = Path(__file__).absolute()
-# project_dir = cur_file.parents[2]
+# project_dir = Path(os.getcwd())
+cur_file = Path(__file__).absolute()
+project_dir = cur_file.parents[2]
 
 os.sys.path.append(project_dir.as_posix())
 
-data_dir = project_dir.joinpath('data')
-org_dir = data_dir.joinpath('processed/preprocess_1')
-# syn_dir = data_dir.joinpath('processed/2_produce_data/synthetic_decoded')
-syn_dir = data_dir.joinpath('processed/no_bind/decoded')
-output_path = project_dir.joinpath("data/processed/4_results")
 figure_path = project_dir.joinpath("figures")
 
 from src.MyModule.ml_function import *
@@ -30,6 +26,7 @@ config = load_config()
 
 def argument_parse():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--random_seed", default = 0, type = int)
     parser.add_argument("--age", default = 50, type = int)
     args = parser.parse_args()
     return args
@@ -49,7 +46,7 @@ def process_synthetic(synthetic) :
 def prepare_data(data) :
     data = data.copy()
     data.rename(columns = {"RLPS_DIFF" : "RLPS DIFF"}, inplace =True)
-    data = data.drop(["DEAD_DIFF", "PT_SBST_NO", "OVR_SURV", "Unnamed: 0"], axis = 1)
+    data = data.drop(["DEAD_DIFF", "PT_SBST_NO", "OVR_SURV"], axis = 1)
     data = data.fillna(999)
     return data
 
@@ -99,14 +96,15 @@ def get_results(original, synthetic):
     return model_arr
 
 
-def test_model(model_list, type, epsilon, test) :
+def test_model(model_list, type, epsilon, test, age, model_path) :
     test_x, test_y = test
+    test_x = test_x.astype('float')
     model_names = ["DecisionTree", "RandomForest", "XGBoost"]
 
     scores = []
     for idx,(model, scaler) in enumerate(model_list):
+
         pred = model.predict(test_x)
-        
         auroc = roc_auc_score(test_y,pred)
         f1score = f1_score(test_y, pred)
         accuracy = accuracy_score(test_y, pred)
@@ -121,17 +119,32 @@ def test_model(model_list, type, epsilon, test) :
                 "auprc" : auprc}
 
         scores.append(book)
+        
+        model_name = model_names[idx] + f'_{type}_{epsilon}_{age}' 
+        save_model(model_path, model_name, model)
+
     return scores
 
 #%%
 def main() :
     args = argument_parse()
+    seed = args.random_seed
     age = args.age
 
-    train = pd.read_pickle(org_dir.joinpath(f'train_ori_{age}.pkl'))
+    data_dir = project_dir.joinpath('data')
+    org_dir = data_dir.joinpath(f'processed/seed{args.random_seed}/1_preprocess')
+    syn_dir = data_dir.joinpath(f'processed/seed{args.random_seed}/2_produce_data/synthetic_decoded')
+    # syn_dir = data_dir.joinpath(f'processed/seed{args.random_seed}/no_bind/decoded')
+    output_path = project_dir.joinpath(f"data/processed/seed{args.random_seed}/4_results")
+    model_path = project_dir.joinpath(f'data/processed/seed{args.random_seed}/4_results/models/')
+
+    if not model_path.exists() : 
+        model_path.mkdir(parents=True)
+
+    train = pd.read_pickle(org_dir.joinpath(f'train_ori_{args.age}.pkl'))
     train = train.replace(np.NaN, 999)
 
-    test = pd.read_pickle(org_dir.joinpath(f'test_{age}.pkl'))
+    test = pd.read_pickle(org_dir.joinpath(f'test_{args.age}.pkl'))
     test = test.fillna(999)
 
     train=train.drop(['DEAD_DIFF','PT_SBST_NO','OVR_SURV'], axis=1)
@@ -148,7 +161,7 @@ def main() :
     syn_list = list(map(process_synthetic, syn_list))
 
     rr_models = train_real_real((train_x, train_y))
-    rr_results = test_model(rr_models, 'trtr', 0, (test_x, test_y))
+    rr_results = test_model(rr_models, 'trtr', 0, (test_x, test_y), args.age, model_path)
     all_test_result = rr_results.copy()
     # rr_result -> list. Thus you need to append to this 
     
@@ -158,12 +171,12 @@ def main() :
         strategy_list = get_results((train_x, train_y), (syn_x, syn_y))
 
         for j, train_type in enumerate(['tstr', 'trts', 'tsts']) :
-            result = test_model(strategy_list[j], train_type, epsilon, (test_x, test_y))
+            result = test_model(strategy_list[j], train_type, epsilon, (test_x, test_y), args.age, model_path)
             all_test_result.extend(result)
 
     test_result = pd.DataFrame(all_test_result)
-    # test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}.csv'),index=False)
-    test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}_no_bind.csv'),index=False)
+    test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}.csv'),index=False)
+    # test_result.to_csv(output_path.joinpath(f'training_strategy_{args.age}_no_bind.csv'),index=False)
     
     print("finished calculating the training strategy!!")
 
@@ -218,5 +231,3 @@ def main() :
 
 if __name__ == "__main__" :
     main()
-
-#%%

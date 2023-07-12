@@ -42,21 +42,21 @@ function do_process {
 # if the seed = 1 then only do the process once
 
 
-SET=$(seq 1 $3)
-
-if [ $3 -eq 1 ]
-then
-    do_process $1 $2 0
-    echo "ended for only seed = 0"
-
-else 
-
-    for seed in $SET
-
-    do
-        do_process $1 $2 $seed
-        echo "ended process for seed $seed"
-
-    done
-fi
+# SET=$(seq 1 $3)
+#
+# if [ $3 -eq 1 ]
+# then
+#     do_process $1 $2 0
+#     echo "ended for only seed = 0"
+#
+# else 
+#
+#     for seed in $SET
+#
+#     do
+#         do_process $1 $2 $seed
+#         echo "ended process for seed $seed"
+#
+#     done
+# fi
 

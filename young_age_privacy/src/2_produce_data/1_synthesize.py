@@ -69,9 +69,9 @@ def train_bayesian_network(input_data,
     description_file = output_path.joinpath(f'description_{which_cohort}_{epsilon_value}_{args.age}.json').as_posix()
     synthetic_data_path = output_path.joinpath(f'S0_{which_cohort}_{epsilon_value}_{args.age}.csv').as_posix()
 
-    describer.save_dataset_description_to_file(description_file) 
+    describer.save_dataset_description_to_file(description_file)    
 
-    print("starting generating the data...")
+    print("starting generating the data..." )
 
     generator = DataGenerator()
     generator.generate_dataset_in_correlated_attribute_mode(num_generate, description_file)
@@ -92,7 +92,6 @@ def argument_parse():
 def main():
     args = argument_parse()
     random_seed = args.random_seed 
-    age = args.age
 
     ## settings for bayesian network
 
@@ -114,7 +113,6 @@ def main():
 
     for epsilon in epsilons:
 
-        ignoredCohorts = []
         for df_path in cohort_file_path:
 
             df = pd.read_csv(df_path)
@@ -124,7 +122,6 @@ def main():
                 If there is only one case in the cohort, remove it from the synthesizing source
                 '''
                 cohort_file_path.remove(df_path)
-                ignoredCohorts.append(str(df_path+'\n'))
                 continue
 
             print("df path is {}".format(df_path))
@@ -149,10 +146,6 @@ def main():
                                    seed = random_seed,
                                    args = args)
 
-        with open("ignored_cohorts.txt", 'w') as f:
-            f.writelines(ignoredCohorts)
-                
-            
         print("finished synthesizing for all epsilons and cohorts")
 
         cohort_null_columns_dict = pd.read_pickle(input_path.joinpath(f"null_columns_dict_{args.age}.pkl"))
@@ -164,10 +157,8 @@ def main():
 
         for df_path in cohort_file_path:
             cohort = extract_cohort_information(df_path)
-            
             try : 
                 syn_df =  pd.read_csv(output_path.joinpath(f"S0_{cohort}_{epsilon}_{args.age}.csv"))     
-
             except :
                 print(f'cohort {cohort} does not exist')
                 continue
@@ -189,7 +180,6 @@ def main():
 
 #%%
 if __name__ == "__main__" : 
-
     main()
     print("finished synthesizing for all epsilons and cohorts")
 

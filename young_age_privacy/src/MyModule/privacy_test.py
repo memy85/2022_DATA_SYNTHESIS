@@ -42,8 +42,8 @@ class MembershipInference :
         holdout = self.holdout.iloc[:, :-1]
 
         testset = pd.concat([original, holdout], ignore_index=True)
-        testy1 = np.zeros(original.shape[0])
-        testy2 = np.ones(holdout.shape[0])
+        testy1 = np.ones(original.shape[0])
+        testy2 = np.zeros(holdout.shape[0])
         testy = np.concatenate([testy1, testy2])
 
         # first train, fit the model with synthetic data
@@ -109,9 +109,11 @@ class Reidentification :
         self.classifier1.fit(self.synthetic1, self.syntheticY)
         self.classifier2.fit(self.synthetic2, self.syntheticY)
 
+        columns = self.featureset1 + self.featureset2
+
         # classify the data : synthetic1, synthetic2
-        pred1 = self.classifier1.kneighbors(self.original, n_neighbors=1, return_distance=False)
-        pred2 = self.classifier2.kneighbors(self.original, n_neighbors=1, return_distance=False)
+        pred1 = self.classifier1.kneighbors(self.original.loc[:, columns], n_neighbors=1, return_distance=False)
+        pred2 = self.classifier2.kneighbors(self.original.loc[:, columns], n_neighbors=1, return_distance=False)
 
         syntheticScore = sum(pred1 == pred2)/len(pred1)
         self.syntheticScore = syntheticScore
@@ -122,9 +124,11 @@ class Reidentification :
         self.classifier1.fit(self.holdout1, self.holdoutY)
         self.classifier2.fit(self.holdout2, self.holdoutY)
 
+        columns = self.featureset1 + self.featureset2
+
         # classify the data : synthetic1, synthetic2
-        pred1 = self.classifier1.kneighbors(self.original, n_neighbors=1, return_distance=False)
-        pred2 = self.classifier2.kneighbors(self.original, n_neighbors=1, return_distance=False)
+        pred1 = self.classifier1.kneighbors(self.original.loc[:, columns], n_neighbors=1, return_distance=False)
+        pred2 = self.classifier2.kneighbors(self.original.loc[:, columns], n_neighbors=1, return_distance=False)
 
         score = sum(pred1 == pred2)/len(pred1)
         self.baseline_score = score
@@ -180,8 +184,8 @@ class AttributeDisclosure :
         self.synthetic = synthetic
         self.sensitive_features = sensitive_features
 
-        # self.classifier = KNeighborsClassifier() # you can choose whatever you want!
-        self.classifier = RandomForestClassifier(max_depth = 2, random_state=0)
+        self.classifier = KNeighborsClassifier() # you can choose whatever you want!
+        # self.classifier = RandomForestClassifier(max_depth = 2, random_state=0)
 
         # score dictionary for features
         self.baseline_score = {}
@@ -249,4 +253,7 @@ class AttributeDisclosure :
             self.train_test_synthetic(feature)
 
         return self.baseline_score, self.synthetic_score
+
+#%%
+
 

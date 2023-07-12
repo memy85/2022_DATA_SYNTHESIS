@@ -133,7 +133,7 @@ def preprocess_for_machine_learning(*args, **kwargs):
 
                 for key, syntheticData in syntheticDict.items():
                     syntheticData = syntheticData.copy()
-                    syntheticData = syntheticData.drop(columns = ["Unnamed: 0","PT_SBST_NO"])
+                    syntheticData = syntheticData.drop(columns = ["PT_SBST_NO"])
                     syntheticData = syntheticData.fillna(999)
                     processed_SyntheticDict[key] = syntheticData
 

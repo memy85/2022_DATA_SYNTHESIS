@@ -47,7 +47,7 @@ SET=$(seq 1 $3)
 
 if [ $3 -eq 1 ]
 then
-    do_process $1 $2 0
+    do_process $1 $2 1
     echo "ended for only seed = 0"
 
 else 

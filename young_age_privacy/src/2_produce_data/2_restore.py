@@ -3,20 +3,21 @@
 베이지안 네트워크 돌린 후 복원하는 코드
 '''
 #%%
-
 import os, sys
 from pathlib import Path
 import random
 import argparse
 from sklearn.preprocessing import LabelEncoder
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path().cwd()
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path().cwd()
 
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
 from src.MyModule.utils import *
+#%%
+
 config = load_config()
 
 #%%
@@ -26,51 +27,35 @@ import pandas as pd
 import pickle
 
 def decode(whole_encoded_df, tables, bind_data_columns):
-    '''
-    whole_encoded_df : S0_mult_encoded_epsilon_age.csv
-    tables : list of tables 
-    bind_data_columns : bind_columns saved in pickle form
-
-    '''
-
-    lenColumns = len(whole_encoded_df.columns)
+    
     np_encoded = np.array(whole_encoded_df)
     np_encoded = np_encoded.astype(str)
     restored = pd.DataFrame()
 
-    for k in range(0,lenColumns):
+    for k in range(len(np_encoded.transpose())):
         temp1 = []
-
-        for i in np_encoded[:,k]:
+        for i in np_encoded.transpose()[k]:
             temp2=[]
-            a = '' # create a vaccum string
-            
-            for j in range(0, len(i)):
-                a += i[j]
-
-                if(((j+1)%3) == 0 ):
+            a =''
+            for j in range(len(i)):
+                a+=i[j]
+                if((j+1)%3==0):
                     temp2.append(a)
                     if(len(a)!=3):
                         print('error')
-
-                # reset a as empty string
                     a=''
             
             temp1.append(temp2)
-        sep_df = pd.DataFrame(temp1) # columns with len for specific column
-        restored = pd.concat([restored, sep_df], axis=1)  # extend the columns
+        sep_df = pd.DataFrame(temp1)
+        restored = pd.concat([restored,sep_df],axis=1)
         
-    # cols = []
-    # for head in tables:
-    #
-    #     # originally bind.filter(like=head)
-    #
-    #     columns = list(filter(lambda x : head in x, bind_data_columns))
-    #     for col in columns:
-    #         cols.append(col)
-    #
-    # assert len(restored.columns) == len(cols), "the length are not the same"
-    # restored.columns = cols
+    cols = []
+    for head in tables:
+        # originally bind.filter(like=head)
+        columns = list(filter(lambda x : head in x, bind_data_columns))
+        for col in columns:
+            cols.append(col)
+    #restored.columns = cols
     
     return restored
 
@@ -82,6 +67,7 @@ def restore_day(data, target, multiplier):
         restored_days = 0
         if days != 0 and days != 999:
             restored_days = days * multiplier + random.randrange(-int(multiplier/2), int(multiplier/2)+1,1)
+
         elif days == 0 :
             restore_days = days + random.randrange(0, int(multiplier/2)+1,1)
         elif days == 999 :
@@ -91,6 +77,7 @@ def restore_day(data, target, multiplier):
     data[target] = days_arr
     return data
 
+                                  
 #%%
 
 def argument_parse():
@@ -101,71 +88,68 @@ def argument_parse():
     args = parser.parse_args()
     return args
 
+
 def main():
     args = argument_parse()
     random_seed = args.random_seed
+    age = args.age
 
-    #%%
+#%%
     # random_seed = 0
     # age = 50
-    raw_path = get_path("data/raw/D0_Handmade_ver1.1.xlsx")
+    raw_path = get_path("data/raw/D0_Handmade_ver2.csv")
 
     project_path = Path(config["project_path"])
     # input_path = get_path("data/processed/no_bind")
-    preprocess_1_path = get_path(f"data/processed/seed{random_seed}/1_preprocess")
     input_path = get_path(f"data/processed/seed{random_seed}/2_produce_data")
+    preprocess_1_path = get_path(f"data/processed/seed{random_seed}/1_preprocess")
     output_path = get_path(f"data/processed/seed{random_seed}/2_produce_data")
-
+    # output_path = get_path("data/processed/no_bind/restored")
     if not output_path.exists() : 
         output_path.mkdir(parents=True)
 
-    data = pd.read_excel(raw_path)
+    data = pd.read_csv(raw_path)
 
     #%% read bind colums
     bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{args.age}.pkl"))
-    # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{age}.pkl"))
+    # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/1_preprocess/bind_columns_{50}.pkl"))
 
     #%%
     tables= []
-
     for col in bind_columns:
-        tables.append('_'.join(col.split('_')[0:1]))
+            tables.append('_'.join(col.split('_')[0:1]))
 
     epsilons = config['epsilon']
-    # epsilons = [0.1, 1, 10, 100, 1000, 10000]
 
     for epsilon in epsilons:
-        print(f"this is epsilon : {epsilon}")
 
-        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+        # syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{50}.csv'))
 
-    #%%
         try:
-            syn = syn.drop('Unnamed: 0', axis=1)
+            syn = syn.drop(columns = ['Unnamed: 0'])
 
         except:
             pass
-
+       #%%
         syn = syn.astype(str)
         # need to comment it if you do it with bind columns
         # syn = syn.replace('nan', 999)
 
         # uncomment if the columns are binded!!
         for col in syn.iloc[:,11:]:
-            syn[col] = syn[col].str.replace('r','')
+            syn[col] =syn[col].str.replace('r','')
             
-        decoded = decode(syn.iloc[:, 11:], tables, bind_columns)
-    #%%
+        decoded = decode(syn.iloc[:,11:], tables, bind_columns)
         decoded.columns = bind_columns
 
-        syn = pd.concat([syn.iloc[:,:11], decoded], axis=1)
+        syn = pd.concat([syn.iloc[:,:11],decoded],axis=1)
         syn = syn.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
          
-    #%%
+        #%%
         # # continous restore    
         syn['BSPT_IDGN_AGE'] = syn['BSPT_IDGN_AGE'].astype(int)
         ages=[]
-
         for age in syn['BSPT_IDGN_AGE']:
             if age < 10:
                 restored_age = age * 5 + random.randrange(-2,3,1)
@@ -195,8 +179,9 @@ def main():
             syn[col] = syn[col].astype(float).astype(int)
         
         # Label Encoding for ml
-        ml_data=syn.copy()
+        ml_data = syn.copy()
         encoder = LabelEncoder() 
+        #%%
         
         ####### ML data #############################################################################################################################
 
@@ -212,20 +197,24 @@ def main():
 
         if not output_path.joinpath(f'synthetic_decoded').exists():
             output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
+#%%
                     
-        ml_data.to_csv(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
+        ml_data.to_csv(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'), index=False)
+
+#%%
 
         # date time restore with randomly
         start_date = min(data['BSPT_FRST_DIAG_YMD'])
         end_date = max(data['BSPT_FRST_DIAG_YMD'])
         
-        date_range = pd.date_range(start_date,end_date,freq='D')
+        date_range = pd.date_range(start_date, end_date,freq='D')
 
         date = []
         for _ in range(len(syn)):
             date.append(random.choice(date_range))
         
         syn.insert(4,'BSPT_FRST_DIAG_YMD', date)    
+
         
         for col in ['RLPS', 'DEAD']:
             diff = []
@@ -256,11 +245,14 @@ def main():
          
         # read encoder, list-like
         encoders = pd.read_pickle(preprocess_1_path.joinpath(f"LabelEncoder_{args.age}.pkl"))
-            
+        # encoders = pd.read_pickle(preprocess_1_path.joinpath(f"LabelEncoder_{50}.pkl"))
+
+#%%
         # numeric to context
-        for i in range(len(encoders)):
+        for col, encoder in encoders:
             try:
-                syn[syn.columns[i+14]] = encoders[i].inverse_transform(syn[syn.columns[i+14]])
+                # syn[syn.columns[i+14]] = encoders[i].inverse_transform(syn[syn.columns[i+14]])
+                syn[col] = encoder.inverse_transform(syn[col])
             except:
                 pass
 
@@ -269,7 +261,7 @@ def main():
 
         pkl_encode = pd.read_pickle(preprocess_1_path.joinpath(f"label_dict_{args.age}.pkl")) 
 
-        for key in pkl_encode.keys():
+        for key, valDict in pkl_encode.items():
             inverse = {}
             for k, v in pkl_encode[key].items():
                 inverse[v] = k
@@ -282,8 +274,7 @@ def main():
         if not save_path.exists():
             save_path.mkdir(parents=True)
 
-        syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),
-                   encoding='cp949')
+        syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),encoding='cp949', index=False)
 #%%
 
 if __name__ == "__main__" : 
@@ -349,14 +340,3 @@ if __name__ == "__main__" :
 
 ##%%
 #ori['SGPT'].apply(lambda x : x.replace('r'))
-
-#%%
-
-# synthesized.to_csv(output_path.joinpath(f"S0_mult_encoded_{epsilon}_{args.age}.csv"), index=False)
-#
-# #%%
-# df = pd.read_csv(input_path.joinpath("S0_mult_encoded_0_50.csv"))
-# #%%
-# df['MLPT'].value_counts()
-# #%%
-# df

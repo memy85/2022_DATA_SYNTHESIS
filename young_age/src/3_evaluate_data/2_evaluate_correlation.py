@@ -3,9 +3,10 @@
 from pathlib import Path
 import os, sys
 
-project_path = Path(__file__).absolute().parents[2]
-# project_path = Path().cwd()
+# project_path = Path(__file__).absolute().parents[2]
+project_path = Path().cwd()
 os.sys.path.append(project_path.as_posix())
+
 #%%
 from src.MyModule.utils import *
 
@@ -37,7 +38,7 @@ class CorrelationChecker:
 
     def check(self) :
         self.data1columns = set(self.data1.columns.tolist())
-        self.data2columns = set(self.data1.columns.tolist())
+        self.data2columns = set(self.data2.columns.tolist())
 
         if len(self.data1columns - self.data2columns) < 1 :
             return True
@@ -102,12 +103,12 @@ def decode(whole_encoded_df, tables, bind_data_columns):
 
     return restored
          
-def prepare_original_data(age) :
+def prepare_original_data(random_seed, age) :
 
-    original_data_path = get_path(f"data/processed/preprocess_1/encoded_D0_{age}.csv")
+    original_data_path = get_path(f"data/processed/seed{random_seed}/1_preprocess/encoded_D0_{age}.csv")
     data = pd.read_csv(original_data_path)
 
-    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{age}.pkl"))
 
     tables= []
     for col in bind_columns:
@@ -118,33 +119,33 @@ def prepare_original_data(age) :
         pass
     data = data.astype(str)
 
-    for col in data.iloc[:,11:]:
-        data[col] = data[col].str.replace('r','')
-        
-    decoded = decode(data.iloc[:,11:], tables, bind_columns)
-    decoded.columns = bind_columns
+    # for col in data.iloc[:,11:]:
+    #     data[col] = data[col].str.replace('r','')
+    #     
+    # decoded = decode(data.iloc[:,11:], tables, bind_columns)
+    # decoded.columns = bind_columns
 
     data.reset_index(drop=True, inplace=True)
     
-    data = pd.concat([data.iloc[:,:11],decoded],axis=1)
+    # data = pd.concat([data.iloc[:,:11],decoded],axis=1)
     data = data.rename(columns = {'RLPS DIFF' : 'RLPS_DIFF'})
     data = data.drop(columns = "PT_SBST_NO")
     data['BSPT_STAG_VL'] = data['BSPT_STAG_VL'].astype('float').astype('object')
 
     return data
 
-def prepare_synthetic_data(age) :
+def prepare_synthetic_data(random_seed, age) :
 
     epsilons = config['epsilon']
     synthetic_data_list = []
 
-    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{age}.pkl"))
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{age}.pkl"))
 
     tables= []
     for col in bind_columns:
             tables.append('_'.join(col.split('_')[0:1]))
 
-    synthetic_path = get_path("data/processed/2_produce_data")
+    synthetic_path = get_path(f"data/processed/seed{random_seed}/2_produce_data")
     for epsilon in epsilons:
         syn = pd.read_csv(synthetic_path.joinpath(f'S0_mult_encoded_{epsilon}_{age}.csv'))
 
@@ -171,8 +172,8 @@ def prepare_synthetic_data(age) :
 def calculate_correlation_diff_for_all_variables() :
     args = argument_parse()
 
-    original = prepare_original_data(args.age)
-    synthetic_data_list = prepare_synthetic_data(args.age)
+    original = prepare_original_data(args.random_seed, args.age)
+    synthetic_data_list = prepare_synthetic_data(args.random_seed, args.age)
     
     for idx, epsilon in enumerate(config['epsilon']) :
         processor = CorrelationChecker(original, synthetic_data_list[idx]) 
@@ -233,8 +234,10 @@ def load_pickle(path) :
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--age', default = 50, type = int)
+    parser.add_argument('--random_seed', default = 0, type = int)
     args = parser.parse_args()
     return args
+
 #%%
 def main() : 
     args = argument_parse()
@@ -259,11 +262,11 @@ def main() :
     ]
 
 
-    original_path = get_path(f'data/processed/3_evaluate_data/matched_org_{args.age}.pkl')
+    original_path = get_path(f'data/processed/seed{args.random_seed}/3_evaluate_data/matched_org_{args.age}.pkl')
 
     synthetic_data_path_list = []
     for epsilon in config['epsilon'] : 
-        synthetic_path = get_path(f'data/processed/3_evaluate_data/matched_syn_{epsilon}_{args.age}.pkl')
+        synthetic_path = get_path(f'data/processed/seed{args.random_seed}/3_evaluate_data/matched_syn_{epsilon}_{args.age}.pkl')
         synthetic_data_path_list.append(synthetic_path)
 
     original = pd.read_pickle(original_path) 
