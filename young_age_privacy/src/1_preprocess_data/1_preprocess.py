@@ -4,8 +4,7 @@ from pathlib import Path
 import os, sys
 import argparse
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age_privacy")
+project_path = Path(__file__).absolute().parents[2]
 print(f"this is project_path : {project_path.as_posix()}")
 os.sys.path.append(project_path.as_posix())
 
@@ -35,6 +34,14 @@ def argument_parse():
     return args
 
 
+def transform_to_date(dateStringColumn):
+    
+    try :
+        return pd.to_datetime(dateStringColumn, format="%Y%m%d")
+    except : 
+        raise ValueError
+
+
 #%%
 def create_cohort(data, cohort_criteria):
     '''
@@ -44,7 +51,7 @@ def create_cohort(data, cohort_criteria):
     data.loc[:, cohort_criteria] = data[cohort_criteria].astype('int64')
     
     cohort_info = [(combi, cohort) for combi, cohort in data.groupby(cohort_criteria)]
-    return cohort_info
+    return cohort_info     
 
 #%%
 def remove_previous_cohorts(output_path, age) :
@@ -64,6 +71,8 @@ def main():
     age = args.age
     random_seed =  args.random_seed
     #%%
+    # age = 50
+    # random_seed = 0
 
     seed_path = get_path(f"data/processed/seed{random_seed}")
     output_path = seed_path.joinpath('1_preprocess')
@@ -74,12 +83,31 @@ def main():
     if not output_path.exists() : 
         output_path.mkdir(parents=True)
 
-    data = pd.read_excel(project_path.joinpath('data/raw/D0_Handmade_ver1.1.xlsx'))
+    data = pd.read_csv(project_path.joinpath('data/raw/D0_Handmade_ver2.csv'))
+    # past = pd.read_excel(project_path.joinpath('data/raw/D0_Handmade_ver1.1.xlsx'))
+
 
     #%% filter patients under age
     data = data[data.BSPT_IDGN_AGE <= age].copy()
     data = data.replace('x',999)
     data = data.replace('Not Data', np.NaN)
+
+    #%% change date columns to date types
+
+    datecolumns = data.filter(like= "YMD").columns.tolist()
+
+    for col in datecolumns : 
+    
+        try : 
+            data.loc[:, col] = pd.to_datetime(data[col], format="%Y%m%d")
+
+        except : 
+            try : 
+                data.loc[:, col] = pd.to_datetime(data[col], format="%Y-%m-%d")
+
+            except :
+                raise ValueError(f"in columns {col}")
+    #%%
 
     # exclude criteria
     # overall observation day is under 30days
@@ -89,12 +117,15 @@ def main():
     cond1 = data['BSPT_STAG_VL'] != 999
     data = data[cond1].dropna(subset=['BSPT_STAG_VL'])
 
+    #%%
     # Surgical T Stage value is missing, but have operation report
     cond1 = data['OPRT_YMD'].isnull()==True
     cond2 = data['SGPT_PATL_T_STAG_VL'].isnull()==True
     data = data.drop(data[cond1&cond2].index)
 
     data.to_pickle(output_path.joinpath(f"original_{age}.pkl"))
+
+    #%%
     data = data.drop(['OVRL_SRVL_DTRN_DCNT','RLPS_DTRN_DCNT'],axis=1)
 
     # whole data length : 1501 -> after apply exclude criteria : 1253
@@ -139,9 +170,10 @@ def main():
         
         bind.rename(columns= {f'REGN_TRTM_CASB_STRT_YMD{i}':f'REGN_TIME_DIFF_{i}'},inplace=True)
         bind.rename(columns= {f'REGN_TRTM_CASB_CSTR_YMD2_{i}':f'REGN_START_DIFF_{i}'},inplace=True)
+        #bind.drop(f'REGN_TRTM_CASB_CSTR_YMD2_{i}',axis=1,inplace = True)
 
     #%%
-    # changning all the data into a encoded form
+    # changing all the data into a encoded form
     # encode_dic == label_dict, they are the same
     # label_dict is for binded columsn
     encoders = []
@@ -161,7 +193,7 @@ def main():
 
             encode_dict[col] = x
             
-            encoders.append(encoder)
+            encoders.append(encoder)        
             trans = encoder.transform(bind[col])
             bind[col] = trans
             
@@ -198,10 +230,8 @@ def main():
     for i in range(len(temp_df)):
         temp_df[i] = temp_df[i].replace(np.NaN, 999)
         temp_df[i] = temp_df[i].astype(int).astype(str)
-
         for j in range(10):
             temp_df[i] = temp_df[i].replace(str(j),'00'+str(j))
-
         for k in range(10,100):
             temp_df[i] = temp_df[i].replace(str(k),'0'+str(k))
             
@@ -212,7 +242,6 @@ def main():
 
     for i in range(len(temp_df)):
         result = temp_df[i].transpose().iloc[:,0]
-
         for j in range(1,len(temp_df[i])):
             result += temp_df[i].transpose().iloc[:,j]
             
@@ -227,7 +256,6 @@ def main():
     #%%
     # make the results into a one dataframe
     whole_encoded_df = results[0]
-
     for df in results[1:]:
         whole_encoded_df = pd.concat([whole_encoded_df, df],axis=1)
 
@@ -240,8 +268,8 @@ def main():
     # unmodified : Now we make the D0 that is the same format as the input for bayesian
     # For the columns in uD0, we change the variables into strings
 
-    unmodified_D0 = pd.concat([standalone,bind], axis=1)
-    unmodified_D0.to_csv(output_path.joinpath(f'encoded_D0_{age}.csv'),index_label=False)
+    unmodified_D0 = pd.concat([standalone, bind], axis=1)
+    unmodified_D0.to_csv(output_path.joinpath(f'encoded_D0_{age}.csv'), index_label=False)
 
     encoders = []
     for col in unmodified_D0.columns:
@@ -251,7 +279,7 @@ def main():
             unmodified_D0[col].astype(str)
             encoder = LabelEncoder()
             encoder.fit(unmodified_D0[col])
-            encoders.append(encoder)
+            encoders.append((col, encoder)) # save as tuple
             trans = encoder.transform(unmodified_D0[col])
             unmodified_D0[col] = trans
            
@@ -265,7 +293,7 @@ def main():
     #%% split train and valid      
 
     encoded = pd.read_pickle(output_path.joinpath(f'encoded_D0_{age}.pkl'))
-    sampled = encoded.sample(frac= 0.5, random_state = random_seed)
+    sampled = encoded.sample(frac= 0.7, random_state = random_seed)
     train_idx = sampled.index
 
     with open(output_path.joinpath(f"train_idx_{age}.pkl"), 'wb') as f:
@@ -284,7 +312,6 @@ def main():
 #%%
     cohort_info_list = []
     cohort_null_columns_dict = {}
-
     for combination, cohort in cohort_info:
 
         combination = "".join([str(element) for element in combination])
@@ -292,7 +319,6 @@ def main():
 
         if cohort_null_columns != 0 :
             cohort = cohort.drop(columns = cohort_null_columns)
-
         else :
             cohort_null_columns = []
 
@@ -313,16 +339,49 @@ def check_null_column(data):
     return columns that are null
     if non, returns 0. If exists returns list
     """
-
     columns = data.isnull().all()[data.isnull().all()].index.tolist()
-
     if len(columns) < 1:
         return 0
-
     else :
         return columns
 #%%
 if __name__ == "__main__" : 
     main()
+
+#%%
+
+# check code part 
+
+#from pathlib import Path
+#import os, sys
+#import argparse
+
+## project_path = Path(__file__).absolute().parents[2]
+#project_path = Path("/home/wonseok/projects/2022_DATA_SYNTHESIS/young_age")
+#print(f"this is project_path : {project_path.as_posix()}")
+#os.sys.path.append(project_path.as_posix())
+
+#from src.MyModule.utils import *
+##%%
+
+#config = load_config()
+#project_path = Path(config["project_path"])
+#input_path = get_path("data/raw")
+#output_path = get_path("data/processed/preprocess_1")
+#if not output_path.exists() : 
+#    output_path.mkdir(parents=True)
+
+##%%
+
+#df = pd.read_csv(output_path.joinpath("encoded_D0_to_syn_50.csv"))
+
+##%%
+#df.BSPT_STAG_CLSF_CD.unique()
+
+#df.BSPT_STAG_VL.unique()
+
+
+#%%
+# sampled.to_csv(output_path.joinpath(f'encoded_D0_to_syn_{args.age}.csv'), index=False)
 
 

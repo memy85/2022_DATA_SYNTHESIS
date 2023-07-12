@@ -1,10 +1,10 @@
 #!/bin/bash
-#
 
+# source do_process.sh
 
 for age in 50 45 40 35 30 ;
 do
-    python3 src/4_results/5_training_strategy.py --age $age
+    python3 src/4_results/5_training_strategy.py --age $age --random_seed $1
 
     if [ "$?" != 0 ]
     then 
@@ -17,3 +17,10 @@ do
 done
 
 echo "finished for all ages"
+
+
+
+# for age in 50 45 40 35 30 ;
+# do 
+#     do_process 2 $age 0    
+

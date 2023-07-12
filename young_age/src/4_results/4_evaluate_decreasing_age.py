@@ -8,16 +8,17 @@ from sklearn.tree import DecisionTreeClassifier
 import pandas as pd
 import numpy as np
 import os
-import sys
+import sys 
 from pathlib import Path
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.model_selection import train_test_split
 import random
+import argparse
 
 import shap
 
-# project_path = Path(__file__).absolute().parents[2]
-project_path = Path().cwd()
+project_path = Path(__file__).absolute().parents[2]
+# project_path = Path().cwd()
 
 os.sys.path.append(project_path.as_posix())
 
@@ -29,12 +30,21 @@ print(f" this is project path : {project_path} ")
 
 #%%
 
+def arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--random_seed", default = 0, type = int)
+    args = parser.parse_args()
+    return args
+
+
 random.seed(0)
 config = load_config()
 age_cut = config['age_cut']
 
-input_path = get_path("data/processed/2_produce_data/synthetic_decoded")
-preprocess_1_path = get_path('data/processed/preprocess_1/')
+args = arguments()
+
+input_path = get_path(f"data/processed/seed{args.random_seed}/2_produce_data/synthetic_decoded")
+preprocess_1_path = get_path(f'data/processed/seed{args.random_seed}/1_preprocess/')
 
 
 synthetic_data_path_list10000 = [input_path.joinpath(
@@ -64,7 +74,7 @@ train_ori_data_path_list = [preprocess_1_path.joinpath(f'train_ori_{age}.pkl') f
 
 test_ori_data_path_list = [preprocess_1_path.joinpath(f'test_{age}.pkl') for age in age_cut]
 
-output_path = get_path("data/processed/4_results/")
+output_path = get_path(f"data/processed/seed{args.random_seed}/4_results/")
 
 if not output_path.exists():
     output_path.mkdir(parents=True)
@@ -119,7 +129,7 @@ def preprocess_original(data) :
     return data
 
 def preprocess_synthetic(data) :
-    data= data.drop(columns = ['PT_SBST_NO', "Unnamed: 0"])
+    data= data.drop(columns = ['PT_SBST_NO'])
     data = data.rename(columns = {"RLPS_DIFF" : "RLPS DIFF"})
     return data
 
@@ -142,7 +152,6 @@ synthetic_data_dict = {
             } for i, epsilon in enumerate(config['epsilon'])
         }
 
-
 #%%
 
 def process_for_training(data, outcome, columns):
@@ -157,7 +166,6 @@ def make_columns(data, drop_columns: list):
     for cols in drop_columns:
         col_list.remove(cols) 
     return col_list
-
 
 #%% set all the outcome and needless variables
 ################################################################# machine learning
@@ -188,7 +196,7 @@ def make_train_valid_dataset(data, synthetic=True, test=False) :
                                                           random_state=0,
                                                           stratify=y)
 
-    return (train_x, train_y) , (valid_x, valid_y)
+    return (train_x, train_y), (valid_x, valid_y)
 
 #%%
 
@@ -202,23 +210,26 @@ syn_train_dict = {
         epsilon : {
             age : make_train_valid_dataset(data, synthetic=True, test=False) for age, data
             in synthetic_data_dict[epsilon].items()
-            } for epsilon in config['epsilon'] }
+            } for epsilon in config['epsilon'] 
+        }
+
 #%%
+
 def save_shap_values(shap_value, path) :
+
     with open(path, 'wb') as f :
-        pickle.dump(shap_value,f)
+        pickle.dump(shap_value, f)
 
-
-#%%
-
-# make train test here!
+#### make train test here!
 
 #%%
 
 def main() :
 
     model_names = [
-        "DecisionTree", "RandomForest", "XGBoost"
+        "DecisionTree", 
+        "RandomForest", 
+        "XGBoost"
     ]
 
     model_path = output_path.joinpath("best_models_age")
@@ -295,6 +306,7 @@ def main() :
     scoreDF.to_pickle(output_path.joinpath('extreme_case.pkl'))
     print(f"saved file to {output_path.as_posix()}")
     return scoreDF
+
 #%%
 
 

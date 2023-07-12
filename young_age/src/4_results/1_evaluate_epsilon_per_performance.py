@@ -32,6 +32,7 @@ config = load_config()
 def argument_parse():
     parser = argparse.ArgumentParser()
     parser.add_argument("--age", default = 50, type = int )
+    parser.add_argument("--randomseed", default=0, type=int)
     args = parser.parse_args()
     return args
 
@@ -54,20 +55,21 @@ def make_columns(data, drop_columns: list):
 def main() :
     args = argument_parse()
     age = args.age
+    seed = args.randomseed
 
-    # input_path = get_path("data/processed/2_produce_data/synthetic_decoded")
-    input_path = get_path("data/processed/no_bind/decoded")
+    input_path = get_path(f"data/processed/seed{seed}/2_produce_data/synthetic_decoded")
+    # input_path = get_path(f"data/processed/seed{seed}/no_bind/decoded")
 
     synthetic_path = input_path.joinpath(f"Synthetic_data_epsilon10000_{age}.csv")
 
     synthetic_data_path_list = [input_path.joinpath(
         f"Synthetic_data_epsilon{eps}_{age}.csv") for eps in config['epsilon']]
 
-    train_ori_path = get_path(f"data/processed/preprocess_1/train_ori_{age}.pkl")
+    train_ori_path = get_path(f"data/processed/seed{seed}/1_preprocess/train_ori_{age}.pkl")
 
-    testset_path = get_path(f"data/processed/preprocess_1/test_{age}.pkl")
+    testset_path = get_path(f"data/processed/seed{seed}/1_preprocess/test_{age}.pkl")
 
-    output_path = get_path("data/processed/4_results/")
+    output_path = get_path(f"data/processed/seed{seed}/4_results/")
 
     figure_path = get_path("figures")
 
@@ -79,6 +81,7 @@ def main() :
 # synthetic = pd.read_csv(synthetic_path)
     synthetic_data_list = list(
         map(lambda x: pd.read_csv(x), synthetic_data_path_list))
+
     train_ori = pd.read_pickle(train_ori_path)
     test = pd.read_pickle(testset_path)
 
@@ -100,7 +103,6 @@ def main() :
 ################################################################# machine learning
 ################################################################# machine learning
 ################################################################# machine learning
-
 
     outcome = "DEAD"
     drop_columns = [outcome, "DEAD_DIFF", "OVR_SURV"] 
@@ -146,7 +148,6 @@ def get_results(original, synthetic, test, synthetic_dict, output_path) :
     (syn_x_dict, syn_y_dict) = synthetic
     synthetic_data_dict = synthetic_dict
     test_x, test_y = test
-
 
     model_names = [
         "DecisionTree", "RandomForest", "XGBoost",

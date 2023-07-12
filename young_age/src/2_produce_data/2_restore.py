@@ -92,11 +92,12 @@ def argument_parse():
 def main():
     args = argument_parse()
     random_seed = args.random_seed
+    age = args.age
 
 #%%
-    random_seed = 1
-    age = 50
-    raw_path = get_path("data/raw/D0_Handmade_ver1.1.xlsx")
+    # random_seed = 0
+    # age = 50
+    raw_path = get_path("data/raw/D0_Handmade_ver2.csv")
 
     project_path = Path(config["project_path"])
     # input_path = get_path("data/processed/no_bind")
@@ -107,11 +108,10 @@ def main():
     if not output_path.exists() : 
         output_path.mkdir(parents=True)
 
-    data = pd.read_excel(raw_path)
+    data = pd.read_csv(raw_path)
 
     #%% read bind colums
-    # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{args.age}.pkl"))
-    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{50}.pkl"))
+    bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/seed{random_seed}/1_preprocess/bind_columns_{args.age}.pkl"))
     # bind_columns = pd.read_pickle(project_path.joinpath(f"data/processed/preprocess_1/bind_columns_{50}.pkl"))
 
     #%%
@@ -120,14 +120,15 @@ def main():
             tables.append('_'.join(col.split('_')[0:1]))
 
     epsilons = config['epsilon']
+
     for epsilon in epsilons:
 
-        #%%
-        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{age}.csv'))
-        # syn = pd.read_csv(seed_input_path.joinpath(f'S0_mult_encoded_{epsilon}_{50}.csv'))
+        syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{args.age}.csv'))
+        # syn = pd.read_csv(input_path.joinpath(f'S0_mult_encoded_{epsilon}_{50}.csv'))
 
         try:
-            syn = syn.drop('Unnamed: 0', axis=1)
+            syn = syn.drop(columns = ['Unnamed: 0'])
+
         except:
             pass
        
@@ -179,7 +180,7 @@ def main():
             syn[col] = syn[col].astype(float).astype(int)
         
         # Label Encoding for ml
-        ml_data=syn.copy()
+        ml_data = syn.copy()
         encoder = LabelEncoder() 
         #%%
         
@@ -199,7 +200,7 @@ def main():
             output_path.joinpath(f'synthetic_decoded').mkdir(parents=True)
 #%%
                     
-        ml_data.to_csv(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'))
+        ml_data.to_csv(output_path.joinpath(f'synthetic_decoded/Synthetic_data_epsilon{epsilon}_{args.age}.csv'), index=False)
 
 #%%
 
@@ -207,7 +208,7 @@ def main():
         start_date = min(data['BSPT_FRST_DIAG_YMD'])
         end_date = max(data['BSPT_FRST_DIAG_YMD'])
         
-        date_range = pd.date_range(start_date,end_date,freq='D')
+        date_range = pd.date_range(start_date, end_date,freq='D')
 
         date = []
         for _ in range(len(syn)):
@@ -247,9 +248,10 @@ def main():
         encoders = pd.read_pickle(preprocess_1_path.joinpath(f"LabelEncoder_{args.age}.pkl"))
             
         # numeric to context
-        for i in range(len(encoders)):
+        for col, encoder in encoders:
             try:
-                syn[syn.columns[i+14]] = encoders[i].inverse_transform(syn[syn.columns[i+14]])
+                # syn[syn.columns[i+14]] = encoders[i].inverse_transform(syn[syn.columns[i+14]])
+                syn[col] = encoder.inverse_transform(syn[col])
             except:
                 pass
 
@@ -258,7 +260,7 @@ def main():
 
         pkl_encode = pd.read_pickle(preprocess_1_path.joinpath(f"label_dict_{args.age}.pkl")) 
 
-        for key in pkl_encode.keys():
+        for key, valDict in pkl_encode.items():
             inverse = {}
             for k, v in pkl_encode[key].items():
                 inverse[v] = k
@@ -271,7 +273,7 @@ def main():
         if not save_path.exists():
             save_path.mkdir(parents=True)
 
-        syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),encoding='cp949')
+        syn.to_csv(save_path.joinpath(f'Synthetic_data_epsilon{epsilon}_{args.age}.csv'),encoding='cp949', index=False)
 #%%
 
 if __name__ == "__main__" : 

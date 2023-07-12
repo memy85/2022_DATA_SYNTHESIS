@@ -41,7 +41,8 @@ def train_and_test(model_name, **kwargs):
     accuracy, auc, f1 = test_model(testset, best_model, scaler)
     return accuracy, auc, f1
 
-def test_model(test_data, model, scaler =
+# def test_model(test_data, model, scaler =
+
 def get_best_model(model_name, train_x, train_y, valid_x, valid_y):
     
     train = (train_x, train_y)

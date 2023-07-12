@@ -1,3 +1,4 @@
+
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -8,6 +9,7 @@ from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
@@ -16,7 +18,9 @@ from imblearn.over_sampling import SMOTE
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from sklearn.metrics import average_precision_score as auprc_score 
+
 import shap
+from shap.explainers import Tree
 from src.MyModule.utils import *
 
     
@@ -35,30 +39,45 @@ def train_and_test(model_name, **kwargs):
     model_path = kwargs['model_path']
     use_scaler = kwargs['scaler']
 
+    if isinstance(train_x, pd.DataFrame) | isinstance(valid_x, pd.DataFrame):
+        try :
+            train_x = train_x.convert_objects(convert_numeric=True)
+            valid_x = valid_x.convert_objects(convert_numeric=True)
+        except :
+            pass
+
     best_model, scaler = get_best_model(model_name, train_x, train_y, valid_x, valid_y)
 
     if best_model == 0 :
         assert False, "there the there is no model named {}".format(model_name)
 
     # first fit best model to all the training data
-    train_x = pd.concat([train_x, valid_x], axis = 0)
-    train_y = pd.concat([train_y, valid_y], axis = 0)
+    updated_x = pd.concat([train_x, valid_x], axis = 0)
+    updated_x = updated_x.astype('float64')
+    updated_y = pd.concat([train_y, valid_y], axis = 0)
+    updated_y = updated_y.astype('float64')
 
-    updated_best_model = best_model.fit(train_x, train_y)
+    updated_best_model = best_model.fit(updated_x, updated_y)
 
     # calculate shap
-    explainer = shap.Explainer(updated_best_model)
-    shap_values = explainer(train_x)
+    
+    # explainer = shap.Explainer(updated_best_model, algorithm = 'tree')
+    explainer = Tree(updated_best_model, data = updated_x)
+    # shap_values = explainer(train_x)
 
     save_model(model_path, model_name, updated_best_model)
 
     testset = (test_x, test_y)
     accuracy, auc, f1, auprc = test_model(testset, updated_best_model, scaler)
+    shap_values = explainer(test_x)
+
     return accuracy, auc, f1, auprc, shap_values
+
 
 def test_model(test_data, model, scaler = None):
     
     x, y = test_data
+    x = x.astype('float64')
     if scaler is not None : 
         scaler = StandardScaler()
         x = scaler.fit_transform(x)
@@ -70,6 +89,7 @@ def test_model(test_data, model, scaler = None):
     auprc = auprc_score(y, pred)
 
     return accuracy, auc, f1, auprc
+
 
 def get_best_model(model_name, train_x, train_y, valid_x, valid_y):
     
@@ -145,7 +165,12 @@ def get_knn(model_name, train, valid, param, scale=True) :
     
     return models[best_idx], scaler
 
-def get_logistic(model_name, train, valid, param, scale = False) :
+
+def get_logistic(model_name,
+                 train,
+                 valid,
+                 param,
+                 scale = False) :
 
     (x, y), (valid_x, valid_y) = train, valid
    
@@ -178,7 +203,11 @@ def get_logistic(model_name, train, valid, param, scale = False) :
 
 #%%
 
-def tree_like(model_name,train,valid,param, scale = None):
+def tree_like(model_name,
+              train,
+              valid,
+              param, 
+              scale = None):
     
     (x, y), (valid_x, valid_y) = train, valid
     cnt = 0
@@ -222,6 +251,9 @@ def tree_like(model_name,train,valid,param, scale = None):
 
 def get_xgb(model_name,train,valid,param, scale = None):
     (x, y), (valid_x, valid_y) = train, valid
+
+    x = x.astype('float64')
+    valid_x = valid_x.astype('float64')
     
     cnt = 0
     prev = 0
