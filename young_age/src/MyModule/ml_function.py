@@ -2,6 +2,7 @@
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -62,16 +63,26 @@ def train_and_test(model_name, **kwargs):
     # calculate shap
     
     # explainer = shap.Explainer(updated_best_model, algorithm = 'tree')
-    explainer = Tree(updated_best_model, data = updated_x)
+    if model_name == "DeepLearning" :
+        explainer = shap.KernelExplainer(updated_best_model.predict_proba, updated_x)
+        # shap_values = explainer.shap_values(X_test)
+        shap_values = 0
+
+    else : 
+        explainer = Tree(updated_best_model, data = updated_x)
+        shap_values = explainer(test_x)
     # shap_values = explainer(train_x)
+
 
     save_model(model_path, model_name, updated_best_model)
 
     testset = (test_x, test_y)
     accuracy, auc, f1, auprc = test_model(testset, updated_best_model, scaler)
-    shap_values = explainer(test_x)
 
     return accuracy, auc, f1, auprc, shap_values
+
+#%%
+
 
 
 def test_model(test_data, model, scaler = None):
@@ -117,6 +128,13 @@ def get_best_model(model_name, train_x, train_y, valid_x, valid_y):
         }
         return get_knn(model_name, train, valid, grid_parameters)
 
+    elif model_name == "DeepLearning" :
+        grid_parameters = {
+                "hidden_layers" : [(100,), (100, 100,), (100, 100, 100,)],
+                "alpha" : [0.0001, 0.001, 0.01, 0.1, 1]
+        }
+        return get_deeplearning(model_name, train, valid, grid_parameters)
+
     else:
         print('model name error')
         return 0
@@ -133,6 +151,48 @@ def save_model(path, model_name, model):
     with open(path.joinpath("{}.pkl".format(model_name)), 'wb') as f:
         pickle.dump(model, f)
 
+#%%
+
+def get_deeplearning(model_name,train,valid,param, scale = None):
+    (x, y), (valid_x, valid_y) = train, valid
+
+    x = x.astype('float64')
+    valid_x = valid_x.astype('float64')
+    
+    cnt = 0
+    prev = 0
+    scores = []
+    models = []    
+    
+    if scale :
+        scaler = StandardScaler()
+        x = scaler.fit_transform(x)
+        valid_x = scaler.fit_transform(valid_x)
+
+    else :
+        scaler = None
+        
+    evals = [(valid_x, valid_y)]
+    
+    for i in param['hidden_layers']:
+        for k in param['alpha']:
+            model = MLPClassifier(hidden_layer_sizes=i, alpha=k, max_iter=300)
+
+            model.fit(x, y)
+
+            pred = model.predict(valid_x)
+            # cur_score = cross_val_score(model,valid_x,valid_y,scoring='f1_macro',cv=10,n_jobs=-1).mean()
+            # cur_score = f1_score(valid_y, pred, average="macro")
+            cur_score = roc_auc_score(valid_y, pred, average="macro")
+
+            scores.append(cur_score)
+            models.append(model)   
+                
+    best_idx = scores.index(max(scores))
+    
+    print(max(scores), models[best_idx])
+    
+    return models[best_idx], scaler
 
 def get_knn(model_name, train, valid, param, scale=True) : 
 
